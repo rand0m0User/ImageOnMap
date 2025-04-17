@@ -36,18 +36,6 @@
 
 package fr.moribus.imageonmap.image;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import fr.moribus.imageonmap.ImageOnMap;
-import fr.moribus.imageonmap.Permissions;
-import fr.moribus.imageonmap.PluginConfiguration;
-import fr.moribus.imageonmap.i18n.I;
-import fr.moribus.imageonmap.map.ImageMap;
-import fr.moribus.imageonmap.map.MapManager;
-import fr.moribus.imageonmap.util.ExceptionCatcher;
-
-import org.bukkit.Bukkit;
-
-import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.URL;
@@ -57,170 +45,231 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import javax.imageio.ImageIO;
+
+import org.bukkit.Bukkit;
+
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
+
+import fr.moribus.imageonmap.ImageOnMap;
+import fr.moribus.imageonmap.Permissions;
+import fr.moribus.imageonmap.PluginConfiguration;
+import fr.moribus.imageonmap.i18n.I;
+import fr.moribus.imageonmap.map.ImageMap;
+import fr.moribus.imageonmap.map.MapManager;
+import fr.moribus.imageonmap.util.ExceptionCatcher;
+import pdqhashing.tools.JustGiveMeThePDQ;
+import pdqhashing.types.Hash256;
+import pdqhashing.types.PDQHashFormatException;
+
 public class ImageRendererExecutor {
 
-    private static final ExecutorService EXECUTOR = Executors.newFixedThreadPool(
-            Math.min(Runtime.getRuntime().availableProcessors(), 4),
-            new ThreadFactoryBuilder()
-                    .setDaemon(true)
-                    .setNameFormat("Image Renderer - #%d")
-                    .setUncaughtExceptionHandler(ExceptionCatcher::catchException)
-                    .build()
-    );
+	private static final ExecutorService EXECUTOR = Executors.newFixedThreadPool(
+			Math.min(Runtime.getRuntime().availableProcessors(), 4),
+			new ThreadFactoryBuilder().setDaemon(true).setNameFormat("Image Renderer - #%d")
+					.setUncaughtExceptionHandler(ExceptionCatcher::catchException).build());
 
-    public static Executor getMainThread() {
-        return Bukkit.getScheduler().getMainThreadExecutor(ImageOnMap.getPlugin());
-    }
+	public static Executor getMainThread() {
+		return Bukkit.getScheduler().getMainThreadExecutor(ImageOnMap.getPlugin());
+	}
 
-    @FunctionalInterface
-    interface ExceptionalSupplier<T> {
-        T supply() throws Throwable;
-    }
+	@FunctionalInterface
+	interface ExceptionalSupplier<T> {
+		T supply() throws Throwable;
+	}
 
-    private static <T> CompletableFuture<T> supply(ExceptionalSupplier<T> supplier) {
-        return CompletableFuture.supplyAsync(() -> {
-            try {
-                return supplier.supply();
-            } catch (Throwable t) {
-                throw new IllegalArgumentException(t);
-            }
-        }, EXECUTOR);
-    }
+	private static boolean IsBanned(String hash) {
+		boolean ret = false;
+		Hash256 img = null;
+		try {
+			img = Hash256.fromHexString(hash);
+		} catch (Exception e) {
+			return false; // not a valid hash, should never happen!
+		}
+		for (String dbh : ImageOnMap.getPlugin().BannedHashes) {
+			try {
+				int dist = img.hammingDistance(Hash256.fromHexString(dbh));
 
-    private static void checkSizeLimit(final UUID playerUUID, final BufferedImage image) throws IOException {
-        var player = Bukkit.getPlayer(playerUUID);
+				Bukkit.getServer().getConsoleSender()
+						.sendMessage("compare: " + hash.toString() + ", in db: " + dbh + ", hammingDistance: " + dist);
+				// ret |= dist >= 75; // tolerance
+				if (dist <= 10) { // tolerance
+					Bukkit.getServer().getConsoleSender()
+							.sendMessage("PDQ hash of image likly matches! returning ban. user posted image:"
+									+ hash.toString() + ", in db: " + dbh + ", hammingDistance: " + dist);
+					ret |= true;
+				}
+			} catch (Exception e) {
+				return false; // not a valid hash, should never happen!
+			}
+		}
+		return ret;
 
-        if ((PluginConfiguration.LIMIT_SIZE_X.get() > 0 || PluginConfiguration.LIMIT_SIZE_Y.get() > 0)
-                && !(player != null && Permissions.BYPASS_SIZE.grantedTo(player))) {
-            if (PluginConfiguration.LIMIT_SIZE_X.get() > 0
-                    && image.getWidth() > PluginConfiguration.LIMIT_SIZE_X.get()) {
-                throw new IOException(I.t("The image is too wide!"));
-            }
+		// return ImageOnMap.getPlugin().BannedHashes.contains(hash);
+	}
 
-            if (PluginConfiguration.LIMIT_SIZE_Y.get() > 0 &&
-                    image.getHeight() > PluginConfiguration.LIMIT_SIZE_Y.get()) {
-                throw new IOException(I.t("The image is too tall!"));
-            }
-        }
-    }
+	private static <T> CompletableFuture<T> supply(ExceptionalSupplier<T> supplier) {
+		return CompletableFuture.supplyAsync(() -> {
+			try {
+				return supplier.supply();
+			} catch (Throwable t) {
+				throw new IllegalArgumentException(t);
+			}
+		}, EXECUTOR);
+	}
 
-    public static CompletableFuture<ImageMap> render(final URL url, final ImageUtils.ScalingType scaling, final UUID playerUUID,
-                                                     final int width, final int height) {
-        return supply(() -> {
-            BufferedImage image = null;
-            var strUrl = url.toString();
-            //If the link is an imgur one
-            if (strUrl.toLowerCase().startsWith("https://imgur.com/")) {
-                //Not handled, can't with the hash only access the image in i.imgur.com/<hash>.<extension>
-                if (strUrl.contains("gallery/")) {
-                    throw new IOException(
-                            "We do not support imgur gallery yet, please use direct link to image instead."
-                                    + " Right click on the picture you want "
-                                    + "to use then select copy picture link:) ");
-                }
+	private static void checkSizeLimit(final UUID playerUUID, final BufferedImage image) throws IOException {
+		var player = Bukkit.getPlayer(playerUUID);
 
-                for (Extension ext : Extension.values()) {
-                    var newLink = "https://i.imgur.com/" + strUrl.substring(18) + "." + ext.toString();
+		if ((PluginConfiguration.LIMIT_SIZE_X.get() > 0 || PluginConfiguration.LIMIT_SIZE_Y.get() > 0)
+				&& !(player != null && Permissions.BYPASS_SIZE.grantedTo(player))) {
+			if (PluginConfiguration.LIMIT_SIZE_X.get() > 0
+					&& image.getWidth() > PluginConfiguration.LIMIT_SIZE_X.get()) {
+				throw new IOException(I.t("The image is too wide!"));
+			}
 
-                    try (var stream = new URL(newLink).openStream()) {
-                        image = ImageIO.read(stream);
-                    }
+			if (PluginConfiguration.LIMIT_SIZE_Y.get() > 0
+					&& image.getHeight() > PluginConfiguration.LIMIT_SIZE_Y.get()) {
+				throw new IOException(I.t("The image is too tall!"));
+			}
+		}
+	}
 
-                    //valid image
-                    if (image != null) {
-                        break;
-                    }
-                }
-            } else {
-                try (var stream = url.openStream()) {
-                    image = ImageIO.read(stream);
-                }
-            }
+	public static CompletableFuture<ImageMap> render(final URL url, final ImageUtils.ScalingType scaling,
+			final UUID playerUUID, final int width, final int height) {
+		return supply(() -> {
+			BufferedImage image = null;
+			var strUrl = url.toString();
+			// If the link is an imgur one
+			if (strUrl.toLowerCase().startsWith("https://imgur.com/")) {
+				// Not handled, can't with the hash only access the image in
+				// i.imgur.com/<hash>.<extension>
+				if (strUrl.contains("gallery/")) {
+					throw new IOException(
+							"We do not support imgur gallery yet, please use direct link to image instead."
+									+ " Right click on the picture you want "
+									+ "to use then select copy picture link:) ");
+				}
 
-            if (image == null) {
-                throw new IOException(I.t("The given URL is not a valid image"));
-            }
+				for (Extension ext : Extension.values()) {
+					var newLink = "https://i.imgur.com/" + strUrl.substring(18) + "." + ext.toString();
 
-            // Limits are in place and the player does NOT have rights to avoid them.
-            checkSizeLimit(playerUUID, image);
+					try (var stream = new URL(newLink).openStream()) {
+						image = ImageIO.read(stream);
 
-            if (scaling != ImageUtils.ScalingType.NONE && height <= 1 && width <= 1) {
-                ImageMap ret = renderSingle(scaling.resize(image, ImageMap.WIDTH, ImageMap.HEIGHT), playerUUID);
-                image.flush();
-                return ret;
-            } else {
-                var resizedImage = scaling.resize(image, ImageMap.WIDTH * width, ImageMap.HEIGHT * height);
-                image.flush();
+					}
 
-                return renderPoster(resizedImage, playerUUID);
-            }
-        });
-    }
+					// valid image
+					if (image != null) {
+						break;
+					}
+				}
+			} else {
 
-    public static CompletableFuture<ImageMap> update(final URL url, final ImageUtils.ScalingType scaling, final UUID playerUUID,
-                                                     final ImageMap map, final int width, final int height) {
-        return supply(() -> {
-            BufferedImage image;
+				try (var stream = url.openStream()) {
+					image = ImageIO.read(stream);
+				}
+			}
 
-            try (var stream = url.openStream()) {
-                image = ImageIO.read(stream);
-            }
+			if (image == null) {
+				throw new IOException(I.t("The given URL is not a valid image"));
+			}
 
-            if (image == null) {
-                throw new IOException(I.t("The given URL is not a valid image"));
-            }
+			// Limits are in place and the player does NOT have rights to avoid them.
+			checkSizeLimit(playerUUID, image);
 
-            // Limits are in place and the player does NOT have rights to avoid them.
-            checkSizeLimit(playerUUID, image);
+			if (scaling != ImageUtils.ScalingType.NONE && height <= 1 && width <= 1) {
+				ImageMap ret = renderSingle(scaling.resize(image, ImageMap.WIDTH, ImageMap.HEIGHT), playerUUID);
+				image.flush();
+				return ret;
+			} else {
+				var resizedImage = scaling.resize(image, ImageMap.WIDTH * width, ImageMap.HEIGHT * height);
+				image.flush();
 
-            var resizedImage = scaling.resize(image, width * 128, height * 128);
+				return renderPoster(resizedImage, playerUUID);
+			}
+		});
+	}
 
-            updateMap(new PosterImage(resizedImage), map.getMapsIDs());
+	public static CompletableFuture<ImageMap> update(final URL url, final ImageUtils.ScalingType scaling,
+			final UUID playerUUID, final ImageMap map, final int width, final int height) {
+		return supply(() -> {
+			BufferedImage image;
 
-            return map;
-        });
-    }
+			try (var stream = url.openStream()) {
+				image = ImageIO.read(stream);
+			}
 
-    private static void updateMap(PosterImage poster, int[] mapsIDs) {
-        poster.splitImages();
+			if (image == null) {
+				throw new IOException(I.t("The given URL is not a valid image"));
+			}
 
-        ImageIOExecutor.saveImage(mapsIDs, poster);
+			// Limits are in place and the player does NOT have rights to avoid them.
+			checkSizeLimit(playerUUID, image);
 
-        if (PluginConfiguration.SAVE_FULL_IMAGE.get()) {
-            ImageIOExecutor.saveImage(ImageMap.getFullImageFile(mapsIDs[0], mapsIDs[mapsIDs.length - 1]), poster.getImage());
-        }
+			var resizedImage = scaling.resize(image, width * 128, height * 128);
+			String hash = JustGiveMeThePDQ.execute(image);
+			if (IsBanned(hash)) {
+				ImageOnMap.DoFancyBan(playerUUID);
+				return null;
+			}
+			updateMap(new PosterImage(resizedImage, hash), map.getMapsIDs());
 
-        getMainThread().execute(() -> Renderer.installRenderer(poster, mapsIDs));
-    }
+			return map;
+		});
+	}
 
-    private static ImageMap renderSingle(final BufferedImage image, final UUID playerUUID) throws Throwable {
-        MapManager.checkMapLimit(1, playerUUID);
+	private static void updateMap(PosterImage poster, int[] mapsIDs) {
+		poster.splitImages();
 
-        int mapID = CompletableFuture.supplyAsync(() -> MapManager.getNewMapsIds(1)[0], getMainThread()).join();
+		ImageIOExecutor.saveImage(mapsIDs, poster);
 
-        ImageIOExecutor.saveImage(mapID, image);
+		if (PluginConfiguration.SAVE_FULL_IMAGE.get()) {
+			ImageIOExecutor.saveImage(ImageMap.getFullImageFile(mapsIDs[0], mapsIDs[mapsIDs.length - 1]),
+					poster.getImage());
+		}
 
-        getMainThread().execute(() -> Renderer.installRenderer(image, mapID));
+		getMainThread().execute(() -> Renderer.installRenderer(poster, mapsIDs));
+	}
 
-        return MapManager.createMap(playerUUID, mapID);
-    }
+	private static ImageMap renderSingle(final BufferedImage image, final UUID playerUUID) throws Throwable {
+		MapManager.checkMapLimit(1, playerUUID);
 
-    private static ImageMap renderPoster(final BufferedImage image, final UUID playerUUID) throws Throwable {
-        PosterImage poster = new PosterImage(image);
+		int mapID = CompletableFuture.supplyAsync(() -> MapManager.getNewMapsIds(1)[0], getMainThread()).join();
 
-        int mapCount = poster.getImagesCount();
-        MapManager.checkMapLimit(mapCount, playerUUID);
+		ImageIOExecutor.saveImage(mapID, image);
 
-        int[] mapsIDs = CompletableFuture.supplyAsync(() -> MapManager.getNewMapsIds(mapCount), getMainThread()).join();
+		getMainThread().execute(() -> Renderer.installRenderer(image, mapID));
+		String hash = JustGiveMeThePDQ.execute(image);
+		if (IsBanned(hash)) {
+			ImageOnMap.DoFancyBan(playerUUID);
+			return null;
+		}
+		return MapManager.createMap(playerUUID, mapID, hash);
+	}
 
-        updateMap(poster, mapsIDs);
+	private static ImageMap renderPoster(final BufferedImage image, final UUID playerUUID) throws Throwable {
+		String hash = JustGiveMeThePDQ.execute(image);
+		if (IsBanned(hash)) {
+			ImageOnMap.DoFancyBan(playerUUID);
+			return null;
+		}
 
-        poster.getImage().flush();
+		PosterImage poster = new PosterImage(image, hash);
 
-        return MapManager.createMap(poster, playerUUID, mapsIDs);
-    }
+		int mapCount = poster.getImagesCount();
+		MapManager.checkMapLimit(mapCount, playerUUID);
 
-    private enum Extension {
-        png, jpg, jpeg, gif
-    }
+		int[] mapsIDs = CompletableFuture.supplyAsync(() -> MapManager.getNewMapsIds(mapCount), getMainThread()).join();
+
+		updateMap(poster, mapsIDs);
+
+		poster.getImage().flush();
+
+		return MapManager.createMap(poster, playerUUID, mapsIDs);
+	}
+
+	private enum Extension {
+		png, jpg, jpeg, gif
+	}
 }

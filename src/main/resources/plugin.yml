@@ -5,6 +5,12 @@ api-version: "1.13"
 
 
 commands:
+  banhash:
+    usage: /banhash <256 bit PDQ hash>
+    description: Ban a PDQ hash of an image.
+  unbanhash:
+    usage: /unbanhash <256 bit PDQ hash>
+    description: Unban a PDQ hash of an image.
   tomap:
     description: render an image in a map
     usage: /<command> [URL]
@@ -106,6 +112,14 @@ permissions:
   imageonmap.update:
     description: "Allows you to update an existing map with a new image."
     default: true
+
+  imageonmap.banhash:
+    description: "Allows you to ban a PDQ hash of an image."
+    default: op
+
+  imageonmap.unbanhash:
+    description: "Allows you to unban a PDQ hash of an image."
+    default: op
 
   imageonmap.updateother:
     description: "Allows you to update an existing map of an other player with a new image."

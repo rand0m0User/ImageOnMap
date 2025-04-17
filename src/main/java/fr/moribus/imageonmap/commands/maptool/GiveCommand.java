@@ -36,94 +36,94 @@
 
 package fr.moribus.imageonmap.commands.maptool;
 
-import fr.moribus.imageonmap.Permissions;
-import fr.moribus.imageonmap.commands.IoMCommand;
-import fr.moribus.imageonmap.i18n.I;
-import fr.moribus.imageonmap.map.ImageMap;
-import fr.moribus.imageonmap.map.MapManager;
-import fr.moribus.imageonmap.commands.CommandException;
-import fr.moribus.imageonmap.commands.CommandInfo;
-
 import java.util.ArrayList;
+
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import fr.moribus.imageonmap.Permissions;
+import fr.moribus.imageonmap.commands.CommandException;
+import fr.moribus.imageonmap.commands.CommandInfo;
+import fr.moribus.imageonmap.commands.IoMCommand;
+import fr.moribus.imageonmap.i18n.I;
+import fr.moribus.imageonmap.map.ImageMap;
+import fr.moribus.imageonmap.map.MapManager;
 
 @CommandInfo(name = "give", usageParameters = "<player name> [playerFrom]:<map name>")
 public class GiveCommand extends IoMCommand {
 
-    @Override
-    protected void run() throws CommandException {
+	@Override
+	protected void run() throws CommandException {
 
-        if (args.length < 2) {
-            throwInvalidArgument(I.t("You must give a valid player name and a map name."));
-            return;
-        }
+		if (args.length < 2) {
+			throwInvalidArgument(I.t("You must give a valid player name and a map name."));
+			return;
+		}
 
-        ArrayList<String> arguments = getArgs();
+		ArrayList<String> arguments = getArgs();
 
-        if (arguments.size() > 3) {
-            throwInvalidArgument(I.t("Too many parameters!"));
-            return;
-        }
-        if (arguments.size() < 1) {
-            throwInvalidArgument(I.t("Too few parameters!"));
-            return;
-        }
-        final String mapName;
-        final String from;
-        final String playerName;
-        final Player playerSender;
-        Player playerSender1;
-        try {
-            playerSender1 = playerSender();
-        } catch (CommandException ignored) {
-            if (arguments.size() == 2) {
-                throwInvalidArgument(I.t("Player name is required from the console"));
-                return;
-            }
-            playerSender1 = null;
-        }
-        playerSender = playerSender1;
-        if (arguments.size() == 2) {
-            from = playerSender.getName();
-            playerName = arguments.get(0);
-            mapName = arguments.get(1);
-        } else {
-            if (arguments.size() == 3) {
-                from = arguments.get(1);
-                playerName = arguments.get(0);
-                mapName = arguments.get(2);
-            } else {
-                from = "";
-                playerName = "";
-                mapName = "";
-            }
-        }
+		if (arguments.size() > 3) {
+			throwInvalidArgument(I.t("Too many parameters!"));
+			return;
+		}
+		if (arguments.size() < 1) {
+			throwInvalidArgument(I.t("Too few parameters!"));
+			return;
+		}
+		final String mapName;
+		final String from;
+		final String playerName;
+		final Player playerSender;
+		Player playerSender1;
+		try {
+			playerSender1 = playerSender();
+		} catch (CommandException ignored) {
+			if (arguments.size() == 2) {
+				throwInvalidArgument(I.t("Player name is required from the console"));
+				return;
+			}
+			playerSender1 = null;
+		}
+		playerSender = playerSender1;
+		if (arguments.size() == 2) {
+			from = playerSender.getName();
+			playerName = arguments.get(0);
+			mapName = arguments.get(1);
+		} else {
+			if (arguments.size() == 3) {
+				from = arguments.get(1);
+				playerName = arguments.get(0);
+				mapName = arguments.get(2);
+			} else {
+				from = "";
+				playerName = "";
+				mapName = "";
+			}
+		}
 
-        final Player sender = playerSender();
+		final Player sender = playerSender();
 
-        retrieveUUID(from, uuid -> {
-            final ImageMap map = MapManager.getMap(uuid, mapName);
+		retrieveUUID(from, uuid -> {
+			final ImageMap map = MapManager.getMap(uuid, mapName);
 
-            if (map == null) {
-                warning(sender, I.t("This map does not exist."));
-                return;
-            }
+			if (map == null) {
+				warning(sender, I.t("This map does not exist."));
+				return;
+			}
 
-            retrieveUUID(playerName, uuid2 -> {
-                var player = Bukkit.getPlayer(uuid2);
-                if (player != null && player.isOnline() && map.give(Bukkit.getPlayer(uuid2))) {
-                    info(I.t("The requested map was too big to fit in your inventory."));
-                    info(I.t("Use '/maptool getremaining' to get the remaining maps."));
-                }
-            });
-        });
-    }
+			retrieveUUID(playerName, uuid2 -> {
+				var player = Bukkit.getPlayer(uuid2);
+				if (player != null && player.isOnline() && map.give(Bukkit.getPlayer(uuid2))) {
+					info(I.t("The requested map was too big to fit in your inventory."));
+					info(I.t("Use '/maptool getremaining' to get the remaining maps."));
+				}
+			});
+		});
+	}
 
-    @Override
-    public boolean canExecute(CommandSender sender) {
-        return Permissions.GIVE.grantedTo(sender);
-    }
+	@Override
+	public boolean canExecute(CommandSender sender) {
+		return Permissions.GIVE.grantedTo(sender);
+	}
 }

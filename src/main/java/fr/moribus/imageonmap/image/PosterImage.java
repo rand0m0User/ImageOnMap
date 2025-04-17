@@ -43,116 +43,123 @@ import java.awt.image.BufferedImage;
  */
 public class PosterImage {
 
-    private static final int WIDTH = 128;
-    private static final int HEIGHT = 128;
+	private static final int WIDTH = 128;
+	private static final int HEIGHT = 128;
 
-    private final BufferedImage originalImage;
+	private final BufferedImage originalImage;
 
-    private BufferedImage[] cutImages;
-    private int lines;
-    private int columns;
-    private int cutImagesCount;
-    private int remainderX;
-    private int remainderY;
+	private BufferedImage[] cutImages;
+	private String hash_PDQ;
+	private int lines;
+	private int columns;
+	private int cutImagesCount;
+	private int remainderX;
+	private int remainderY;
 
-    /**
-     * Creates a new Poster from an entire image
-     *
-     * @param originalImage the original image
-     */
-    public PosterImage(BufferedImage originalImage) {
-        this.originalImage = originalImage;
-        calculateDimensions();
-    }
+	/**
+	 * Creates a new Poster from an entire image
+	 *
+	 * @param originalImage the original image
+	 */
+	public PosterImage(BufferedImage originalImage, String hash_PDQ) {
 
-    private void calculateDimensions() {
-        int originalWidth = originalImage.getWidth();
-        int originalHeight = originalImage.getHeight();
+		this.hash_PDQ = hash_PDQ;
+		this.originalImage = originalImage;
+		calculateDimensions();
+	}
 
-        columns = (int) Math.ceil((double) originalWidth / WIDTH);
-        lines = (int) Math.ceil((double) originalHeight / HEIGHT);
+	private void calculateDimensions() {
+		int originalWidth = originalImage.getWidth();
+		int originalHeight = originalImage.getHeight();
 
-        remainderX = originalWidth % WIDTH;
-        remainderY = originalHeight % HEIGHT;
+		columns = (int) Math.ceil((double) originalWidth / WIDTH);
+		lines = (int) Math.ceil((double) originalHeight / HEIGHT);
 
-        if (remainderX > 0) {
-            columns++;
-        }
+		remainderX = originalWidth % WIDTH;
+		remainderY = originalHeight % HEIGHT;
 
-        if (remainderY > 0) {
-            lines++;
-        }
+		if (remainderX > 0) {
+			columns++;
+		}
 
-        cutImagesCount = columns * lines;
-    }
+		if (remainderY > 0) {
+			lines++;
+		}
 
-    public void splitImages() {
-        try {
-            cutImages = new BufferedImage[cutImagesCount];
+		cutImagesCount = columns * lines;
+	}
 
-            int imageX;
-            int imageY = remainderY == 0 ? 0 : (remainderY - HEIGHT) / 2;
-            for (int i = 0; i < lines; i++) {
-                imageX = remainderX == 0 ? 0 : (remainderX - WIDTH) / 2;
-                for (int j = 0; j < columns; j++) {
-                    cutImages[i * columns + j] = makeSubImage(originalImage, imageX, imageY);
-                    imageX += WIDTH;
-                }
-                imageY += HEIGHT;
-            }
-        } catch (final Throwable e) {
-            if (cutImages != null) {
-                for (BufferedImage bi : cutImages) {
-                    if (bi != null) {
-                        bi.flush();//Safe to free
-                    }
-                }
-            }
-            throw e;
-        }
-    }
+	public void splitImages() {
+		try {
+			cutImages = new BufferedImage[cutImagesCount];
 
-    /**
-     * Generates the subimage that intersects with the given map rectangle.
-     *
-     * @param x X coordinate of top-left point of the map.
-     * @param y Y coordinate of top-left point of the map.
-     * @return the requested subimage.
-     */
-    private BufferedImage makeSubImage(BufferedImage originalImage, int x, int y) {
-        BufferedImage newImage = new BufferedImage(WIDTH, HEIGHT, BufferedImage.TYPE_INT_ARGB);
+			int imageX;
+			int imageY = remainderY == 0 ? 0 : (remainderY - HEIGHT) / 2;
+			for (int i = 0; i < lines; i++) {
+				imageX = remainderX == 0 ? 0 : (remainderX - WIDTH) / 2;
+				for (int j = 0; j < columns; j++) {
+					cutImages[i * columns + j] = makeSubImage(originalImage, imageX, imageY);
+					imageX += WIDTH;
+				}
+				imageY += HEIGHT;
+			}
+		} catch (final Throwable e) {
+			if (cutImages != null) {
+				for (BufferedImage bi : cutImages) {
+					if (bi != null) {
+						bi.flush();// Safe to free
+					}
+				}
+			}
+			throw e;
+		}
+	}
 
-        newImage.getGraphics().drawImage(originalImage, -x, -y, null);
+	/**
+	 * Generates the subimage that intersects with the given map rectangle.
+	 *
+	 * @param x X coordinate of top-left point of the map.
+	 * @param y Y coordinate of top-left point of the map.
+	 * @return the requested subimage.
+	 */
+	private BufferedImage makeSubImage(BufferedImage originalImage, int x, int y) {
+		BufferedImage newImage = new BufferedImage(WIDTH, HEIGHT, BufferedImage.TYPE_INT_ARGB);
 
-        return newImage;
-    }
+		newImage.getGraphics().drawImage(originalImage, -x, -y, null);
 
-    public BufferedImage getImageAt(int i) {
-        return cutImages[i];
-    }
+		return newImage;
+	}
 
-    public BufferedImage getImage() {
-        return originalImage;
-    }
+	public BufferedImage getImageAt(int i) {
+		return cutImages[i];
+	}
 
-    /**
-     * @return the number of lines of the poster
-     */
-    public int getLines() {
-        return lines;
-    }
+	public BufferedImage getImage() {
+		return originalImage;
+	}
 
-    /**
-     * @return the number of columns of the poster
-     */
-    public int getColumns() {
-        return columns;
-    }
+	public String GetHash() {
+		return hash_PDQ;
+	}
 
-    /**
-     * @return the number of split images
-     */
-    public int getImagesCount() {
-        return cutImagesCount;
-    }
+	/**
+	 * @return the number of lines of the poster
+	 */
+	public int getLines() {
+		return lines;
+	}
+
+	/**
+	 * @return the number of columns of the poster
+	 */
+	public int getColumns() {
+		return columns;
+	}
+
+	/**
+	 * @return the number of split images
+	 */
+	public int getImagesCount() {
+		return cutImagesCount;
+	}
 }

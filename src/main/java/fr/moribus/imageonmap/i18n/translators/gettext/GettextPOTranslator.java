@@ -37,57 +37,58 @@
 
 package fr.moribus.imageonmap.i18n.translators.gettext;
 
-import fr.moribus.imageonmap.ImageOnMap;
-import fr.moribus.imageonmap.i18n.translators.Translation;
-import fr.moribus.imageonmap.i18n.translators.Translator;
 import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.Locale;
 import java.util.logging.Level;
 
+import fr.moribus.imageonmap.ImageOnMap;
+import fr.moribus.imageonmap.i18n.translators.Translation;
+import fr.moribus.imageonmap.i18n.translators.Translator;
 
 /**
  * Loads Gettext .po files (uncompiled).
  */
 public class GettextPOTranslator extends Translator {
-    private POFile source = null;
+	private POFile source = null;
 
-    public GettextPOTranslator(Locale locale, File file) {
-        super(locale, file);
-    }
+	public GettextPOTranslator(Locale locale, File file) {
+		super(locale, file);
+	}
 
-    public GettextPOTranslator(Locale locale, String resourceReference) {
-        super(locale, resourceReference);
-    }
+	public GettextPOTranslator(Locale locale, String resourceReference) {
+		super(locale, resourceReference);
+	}
 
-    @Override
-    protected void load() {
-        try (Reader reader = getReader()) {
-            if (reader == null) {
-                return;
-            }
+	@Override
+	protected void load() {
+		try (Reader reader = getReader()) {
+			if (reader == null) {
+				return;
+			}
 
-            source = new POFile(getReader());
+			source = new POFile(getReader());
 
-            source.parse();
+			source.parse();
 
-            for (final Translation translation : source.getTranslations()) {
-                registerTranslation(translation);
-            }
-        } catch (POFile.CannotParsePOException | IOException e) {
-            ImageOnMap.getPlugin().getLogger().log(Level.SEVERE, "Cannot parse the " + getFilePath() + " translations file.", e);
-            source = null;
-        }
-    }
+			for (final Translation translation : source.getTranslations()) {
+				registerTranslation(translation);
+			}
+		} catch (POFile.CannotParsePOException | IOException e) {
+			ImageOnMap.getPlugin().getLogger().log(Level.SEVERE,
+					"Cannot parse the " + getFilePath() + " translations file.", e);
+			source = null;
+		}
+	}
 
-    @Override
-    public Integer getPluralIndex(Integer count) {
-        if (source == null) {
-            return count != 1 ? 1 : 0;
-        }
+	@Override
+	public Integer getPluralIndex(Integer count) {
+		if (source == null) {
+			return count != 1 ? 1 : 0;
+		}
 
-        return source.computePluralForm(count);
-    }
+		return source.computePluralForm(count);
+	}
 
 }

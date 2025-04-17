@@ -30,6 +30,15 @@
 
 package fr.moribus.imageonmap.commands;
 
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
+
+import org.bukkit.ChatColor;
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
+
 import fr.moribus.imageonmap.ImageOnMap;
 import fr.moribus.imageonmap.gui.GuiUtils;
 import fr.zcraft.quartzlib.tools.commands.PaginatedTextView;
@@ -38,162 +47,147 @@ import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Scanner;
-import org.bukkit.ChatColor;
-import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
-
 @CommandInfo(name = "help", usageParameters = "<command name>")
 public class HelpCommand extends Command {
-    @Override
-    protected void run() throws CommandException {
-        if (args.length < 1) {
-            groupHelp(1);
-        } else {
-            if (args.length == 1 && args[0].startsWith("--page=")) {
-                try {
-                    groupHelp(Integer.parseInt(args[0].split("=")[1]));
-                    return;
-                } catch (NumberFormatException ignored) {
-                }
-            }
+	@Override
+	protected void run() throws CommandException {
+		if (args.length < 1) {
+			groupHelp(1);
+		} else {
+			if (args.length == 1 && args[0].startsWith("--page=")) {
+				try {
+					groupHelp(Integer.parseInt(args[0].split("=")[1]));
+					return;
+				} catch (NumberFormatException ignored) {
+				}
+			}
 
-            commandHelp();
-        }
-    }
+			commandHelp();
+		}
+	}
 
-    private void groupHelp(int page) {
-        final List<Command> displayedCommands = new ArrayList<>();
+	private void groupHelp(int page) {
+		final List<Command> displayedCommands = new ArrayList<>();
 
-        for (Command subCommands : commandGroup.getCommands()) {
-            if (subCommands.canExecute(sender)) {
-                displayedCommands.add(subCommands);
-            }
-        }
+		for (Command subCommands : commandGroup.getCommands()) {
+			if (subCommands.canExecute(sender)) {
+				displayedCommands.add(subCommands);
+			}
+		}
 
-        if (sender instanceof Player) {
-            info("");
-        }
+		if (sender instanceof Player) {
+			info("");
+		}
 
-        new GroupHelpPagination()
-                .setData(displayedCommands.toArray(new Command[0]))
-                .setCurrentPage(page)
-                .display(sender);
-    }
+		new GroupHelpPagination().setData(displayedCommands.toArray(new Command[0])).setCurrentPage(page)
+				.display(sender);
+	}
 
-    private void commandHelp() throws CommandException {
-        Command command = commandGroup.getMatchingCommand(args[0]);
-        if (command == null) {
-            error("The specified command does not exist.");
-            return;
-        }
+	private void commandHelp() throws CommandException {
+		Command command = commandGroup.getMatchingCommand(args[0]);
+		if (command == null) {
+			error("The specified command does not exist.");
+			return;
+		}
 
-        if (!command.canExecute(sender)) {
-            warning("You do not have the permission to use this command.");
-        }
+		if (!command.canExecute(sender)) {
+			warning("You do not have the permission to use this command.");
+		}
 
-        String message = "\n";
-        message += GuiUtils.generatePrefixedFixedLengthString("§6" + Commands.CHAT_PREFIX + "§l ",
-                ImageOnMap.getPlugin().getName() + " help for /" + command.getCommandGroup().getUsualName() + " "
-                        + command.getName()) + "\n";
-        message += GuiUtils.generatePrefixedFixedLengthString("§6" + Commands.CHAT_PREFIX + " ",
-                "Usage: §r" + command.getUsageString()) + "\n";
+		String message = "\n";
+		message += GuiUtils.generatePrefixedFixedLengthString("§6" + Commands.CHAT_PREFIX + "§l ",
+				ImageOnMap.getPlugin().getName() + " help for /" + command.getCommandGroup().getUsualName() + " "
+						+ command.getName())
+				+ "\n";
+		message += GuiUtils.generatePrefixedFixedLengthString("§6" + Commands.CHAT_PREFIX + " ",
+				"Usage: §r" + command.getUsageString()) + "\n";
 
-        String help = getHelpText(command);
-        if (help.isEmpty()) {
-            message += "§c" + Commands.CHAT_PREFIX + " There is no help message for this command.";
-        } else {
-            message += help;
-        }
+		String help = getHelpText(command);
+		if (help.isEmpty()) {
+			message += "§c" + Commands.CHAT_PREFIX + " There is no help message for this command.";
+		} else {
+			message += help;
+		}
 
-        sender.sendMessage(message);
-    }
+		sender.sendMessage(message);
+	}
 
-    private String getHelpText(Command command) {
-        String fileName = "help/" + commandGroup.getUsualName()
-                + "/" + command.getName() + ".txt";
+	private String getHelpText(Command command) {
+		String fileName = "help/" + commandGroup.getUsualName() + "/" + command.getName() + ".txt";
 
-        StringBuilder result = new StringBuilder();
+		StringBuilder result = new StringBuilder();
 
-        InputStream stream = getClass().getClassLoader().getResourceAsStream(fileName);
-        if (stream == null) {
-            return "";
-        }
+		InputStream stream = getClass().getClassLoader().getResourceAsStream(fileName);
+		if (stream == null) {
+			return "";
+		}
 
-        Scanner scanner = new Scanner(stream);
+		Scanner scanner = new Scanner(stream);
 
-        while (scanner.hasNextLine()) {
-            String line = scanner.nextLine();
-            result.append("§l§9" + Commands.CHAT_PREFIX + " §r").append(line).append("\n");
-        }
+		while (scanner.hasNextLine()) {
+			String line = scanner.nextLine();
+			result.append("§l§9" + Commands.CHAT_PREFIX + " §r").append(line).append("\n");
+		}
 
-        scanner.close();
+		scanner.close();
 
-        return result.toString().trim();
-    }
+		return result.toString().trim();
+	}
 
+	@Override
+	protected List<String> complete() {
+		if (args.length != 1) {
+			return null;
+		}
 
-    @Override
-    protected List<String> complete() {
-        if (args.length != 1) {
-            return null;
-        }
+		ArrayList<String> matches = new ArrayList<>();
 
-        ArrayList<String> matches = new ArrayList<>();
+		for (Command command : commandGroup.getCommands()) {
+			if (command.getName().startsWith(args[0])) {
+				matches.add(command.getName());
+			}
+		}
 
-        for (Command command : commandGroup.getCommands()) {
-            if (command.getName().startsWith(args[0])) {
-                matches.add(command.getName());
-            }
-        }
+		return matches;
+	}
 
-        return matches;
-    }
+	private class GroupHelpPagination extends PaginatedTextView<Command> {
+		@Override
+		protected void displayHeader(CommandSender receiver) {
+			final String header = ChatColor.BOLD + (commandGroup.getDescription().isEmpty()
+					? ImageOnMap.getPlugin().getName() + " help for /" + commandGroup.getUsualName()
+					: commandGroup.getDescription());
 
+			receiver.sendMessage(receiver instanceof Player ? GuiUtils.generatePrefixedFixedLengthString(
+					ChatColor.BLUE + Commands.CHAT_PREFIX + " " + ChatColor.RESET, header) : header);
+		}
 
-    private class GroupHelpPagination extends PaginatedTextView<Command> {
-        @Override
-        protected void displayHeader(CommandSender receiver) {
-            final String header = ChatColor.BOLD + (commandGroup.getDescription().isEmpty()
-                    ? ImageOnMap.getPlugin().getName() + " help for /" + commandGroup.getUsualName()
-                    : commandGroup.getDescription());
+		@Override
+		protected void displayItem(CommandSender receiver, Command command) {
+			final String commandName = "/" + commandGroup.getUsualName() + " " + command.getName();
+			final String description = commandGroup.getDescription(command.getName());
 
-            receiver.sendMessage(receiver instanceof Player
-                    ? GuiUtils.generatePrefixedFixedLengthString(
-                    ChatColor.BLUE + Commands.CHAT_PREFIX + " " + ChatColor.RESET, header)
-                    : header
-            );
-        }
+			String helpMessage = ChatColor.GOLD + commandName;
+			if (description != null) {
+				helpMessage += ChatColor.GOLD + ": " + ChatColor.WHITE + description;
+			}
 
-        @Override
-        protected void displayItem(CommandSender receiver, Command command) {
-            final String commandName = "/" + commandGroup.getUsualName() + " " + command.getName();
-            final String description = commandGroup.getDescription(command.getName());
+			final String formattedHelpMessage = receiver instanceof Player
+					? GuiUtils.generatePrefixedFixedLengthString(ChatColor.GOLD + Commands.CHAT_PREFIX + " ",
+							helpMessage)
+					: helpMessage;
 
-            String helpMessage = ChatColor.GOLD + commandName;
-            if (description != null) {
-                helpMessage += ChatColor.GOLD + ": " + ChatColor.WHITE + description;
-            }
+			Component helpLine = Component.text()
+					.append(LegacyComponentSerializer.legacySection().deserialize(formattedHelpMessage))
+					.hoverEvent(HoverEvent.showText(Component.text(command.getUsageString())))
+					.clickEvent(ClickEvent.suggestCommand(commandName + " ")).build();
 
-            final String formattedHelpMessage = receiver instanceof Player
-                    ? GuiUtils.generatePrefixedFixedLengthString(ChatColor.GOLD + Commands.CHAT_PREFIX + " ", helpMessage)
-                    : helpMessage;
-            
-            Component helpLine = Component.text()
-                    .append(LegacyComponentSerializer.legacySection().deserialize(formattedHelpMessage))
-                    .hoverEvent(HoverEvent.showText(Component.text(command.getUsageString())))
-                    .clickEvent(ClickEvent.suggestCommand(commandName + " "))
-                    .build();
+			receiver.sendMessage(helpLine);
+		}
 
-            receiver.sendMessage(helpLine);
-        }
-
-        @Override
-        protected String getCommandToPage(int page) {
-            return build("--page=" + page);
-        }
-    }
+		@Override
+		protected String getCommandToPage(int page) {
+			return build("--page=" + page);
+		}
+	}
 }

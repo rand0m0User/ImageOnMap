@@ -30,70 +30,73 @@
 
 package fr.moribus.imageonmap.commands;
 
-import fr.moribus.imageonmap.ImageOnMap;
 import java.util.ArrayList;
 import java.util.List;
 
+import fr.moribus.imageonmap.ImageOnMap;
+
 public class Commands {
-    public static final String CHAT_PREFIX = "┃";
+	public static final String CHAT_PREFIX = "\u2503";// "┃";
 
-    private static final List<CommandGroup> commandGroups = new ArrayList<>();
+	private static final List<CommandGroup> commandGroups = new ArrayList<>();
 
-    /**
-     * Registers a shortcut command.
-     */
-    public static void registerShortcut(String commandGroupName, Class<? extends Command> commandClass,
-                                        String... shortcutNames) {
-        CommandGroup group = getMatchingCommandGroup(commandGroupName);
-        if (group == null) {
-            throw new IllegalArgumentException("Invalid command group name: " + commandGroupName);
-        }
-        CommandGroup newCommandGroup = new CommandGroup(group, commandClass, shortcutNames);
+	/**
+	 * Registers a shortcut command.
+	 */
+	public static void registerShortcut(String commandGroupName, Class<? extends Command> commandClass,
+			String... shortcutNames) {
+		CommandGroup group = getMatchingCommandGroup(commandGroupName);
+		if (group == null) {
+			throw new IllegalArgumentException("Invalid command group name: " + commandGroupName);
+		}
+		CommandGroup newCommandGroup = new CommandGroup(group, commandClass, shortcutNames);
 
-        newCommandGroup.register(ImageOnMap.getPlugin());
-        commandGroups.add(newCommandGroup);
-    }
+		newCommandGroup.register(ImageOnMap.getPlugin());
+		commandGroups.add(newCommandGroup);
+	}
 
-    /**
-     * Registers many new commands.
-     * @param names The names of the commands
-     * @param commandsClasses The matching classes for the commands
-     */
-    @SuppressWarnings("unchecked")
-    public static void register(String[] names, Class<? extends Command>... commandsClasses) {
-        final CommandGroup commandGroup = new CommandGroup(names, commandsClasses);
-        commandGroup.register(ImageOnMap.getPlugin());
+	/**
+	 * Registers many new commands.
+	 * 
+	 * @param names           The names of the commands
+	 * @param commandsClasses The matching classes for the commands
+	 */
+	@SuppressWarnings("unchecked")
+	public static void register(String[] names, Class<? extends Command>... commandsClasses) {
+		final CommandGroup commandGroup = new CommandGroup(names, commandsClasses);
+		commandGroup.register(ImageOnMap.getPlugin());
 
-        commandGroups.add(commandGroup);
-    }
+		commandGroups.add(commandGroup);
+	}
 
-    @SuppressWarnings("unchecked")
-    public static void register(String name, Class<? extends Command>... commandsClasses) {
-        register(new String[] {name}, commandsClasses);
-    }
+	@SuppressWarnings("unchecked")
+	public static void register(String name, Class<? extends Command>... commandsClasses) {
+		register(new String[] { name }, commandsClasses);
+	}
 
-    /**
-     * Gets the command matching the given class.
-     * @param commandClass The command class.
-     * @return The matching gommand, or null if none were found.
-     */
-    public static Command getCommandInfo(Class<? extends Command> commandClass) {
-        Command command = null;
-        for (CommandGroup commandGroup : commandGroups) {
-            command = commandGroup.getCommandInfo(commandClass);
-            if (command != null) {
-                break;
-            }
-        }
-        return command;
-    }
+	/**
+	 * Gets the command matching the given class.
+	 * 
+	 * @param commandClass The command class.
+	 * @return The matching gommand, or null if none were found.
+	 */
+	public static Command getCommandInfo(Class<? extends Command> commandClass) {
+		Command command = null;
+		for (CommandGroup commandGroup : commandGroups) {
+			command = commandGroup.getCommandInfo(commandClass);
+			if (command != null) {
+				break;
+			}
+		}
+		return command;
+	}
 
-    private static CommandGroup getMatchingCommandGroup(String commandName) {
-        for (CommandGroup commandGroup : commandGroups) {
-            if (commandGroup.matches(commandName)) {
-                return commandGroup;
-            }
-        }
-        return null;
-    }
+	private static CommandGroup getMatchingCommandGroup(String commandName) {
+		for (CommandGroup commandGroup : commandGroups) {
+			if (commandGroup.matches(commandName)) {
+				return commandGroup;
+			}
+		}
+		return null;
+	}
 }

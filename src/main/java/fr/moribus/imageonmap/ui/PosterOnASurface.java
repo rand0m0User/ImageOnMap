@@ -36,9 +36,6 @@
 
 package fr.moribus.imageonmap.ui;
 
-import fr.moribus.imageonmap.map.PosterMap;
-import fr.zcraft.quartzlib.tools.world.FlatLocation;
-import fr.zcraft.quartzlib.tools.world.WorldUtils;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.BlockFace;
@@ -47,158 +44,159 @@ import org.bukkit.entity.ItemFrame;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
+import fr.moribus.imageonmap.map.PosterMap;
+import fr.zcraft.quartzlib.tools.world.FlatLocation;
+import fr.zcraft.quartzlib.tools.world.WorldUtils;
+
 public class PosterOnASurface {
 
-    public FlatLocation loc1;
-    public FlatLocation loc2;
+	public FlatLocation loc1;
+	public FlatLocation loc2;
 
-    public ItemFrame[] frames;
+	public ItemFrame[] frames;
 
-    /**
-     * Return the list of map Frames associated with a specific map
-     */
-    public static ItemFrame[] getMatchingMapFrames(PosterMap map, FlatLocation location, int ignored, BlockFace bf) {
-        //int x = map.getColumnAt(mapIndex), y = map.getRowAt(mapIndex);
-        int x = 0;
-        int y = switch (bf) {
-            case EAST, WEST -> map.getColumnCount() - 1;
-            case NORTH, SOUTH -> map.getRowCount() - 1;
-            default -> throw new IllegalStateException("Unexpected value: " + bf);
-        };
-        return getMatchingMapFrames(map, location.clone().addH(x, y, bf), bf).clone();
-    }
+	/**
+	 * Return the list of map Frames associated with a specific map
+	 */
+	public static ItemFrame[] getMatchingMapFrames(PosterMap map, FlatLocation location, int ignored, BlockFace bf) {
+		// int x = map.getColumnAt(mapIndex), y = map.getRowAt(mapIndex);
+		int x = 0;
+		int y = switch (bf) {
+		case EAST, WEST -> map.getColumnCount() - 1;
+		case NORTH, SOUTH -> map.getRowCount() - 1;
+		default -> throw new IllegalStateException("Unexpected value: " + bf);
+		};
+		return getMatchingMapFrames(map, location.clone().addH(x, y, bf), bf).clone();
+	}
 
-    public static ItemFrame[] getMatchingMapFrames(PosterMap map, FlatLocation location, BlockFace bf) {
-        ItemFrame[] frames = new ItemFrame[map.getMapCount()];
-        FlatLocation loc = location.clone();
+	public static ItemFrame[] getMatchingMapFrames(PosterMap map, FlatLocation location, BlockFace bf) {
+		ItemFrame[] frames = new ItemFrame[map.getMapCount()];
+		FlatLocation loc = location.clone();
 
+		int x;
+		int y;
+		switch (bf) {
+		case EAST, WEST, NORTH, SOUTH -> {
+			y = map.getRowCount();
+			x = map.getColumnCount();
+		}
+		default -> throw new IllegalStateException("Unexpected value: " + bf);
+		}
 
-        int x;
-        int y;
-        switch (bf) {
-            case EAST, WEST, NORTH, SOUTH -> {
-                y = map.getRowCount();
-                x = map.getColumnCount();
-            }
-            default -> throw new IllegalStateException("Unexpected value: " + bf);
-        }
+		for (int j = 0; j < y; ++j) {
+			for (int i = 0; i < x; ++i) {
+				int mapIndex = map.getIndexAt(i, j);
 
-        for (int j = 0; j < y; ++j) {
-            for (int i = 0; i < x; ++i) {
-                int mapIndex = map.getIndexAt(i, j);
+				ItemFrame frame = getMapFrameAt(loc, map);
+				if (frame != null) {
+					frames[mapIndex] = frame;
+				}
+				switch (bf) {
+				case EAST, WEST -> loc.addH(0, -1, bf);
+				case NORTH, SOUTH -> loc.addH(1, 0, bf);
+				default -> throw new IllegalStateException("Unexpected value: " + bf);
+				}
+			}
 
-                ItemFrame frame = getMapFrameAt(loc, map);
-                if (frame != null) {
-                    frames[mapIndex] = frame;
-                }
-                switch (bf) {
-                    case EAST, WEST -> loc.addH(0, -1, bf);
-                    case NORTH, SOUTH -> loc.addH(1, 0, bf);
-                    default -> throw new IllegalStateException("Unexpected value: " + bf);
-                }
-            }
+			switch (bf) {
+			case EAST, WEST -> loc.addH(1, map.getColumnCount(), bf);// test
+			case NORTH, SOUTH -> loc.addH(-map.getColumnCount(), -1, bf);
+			default -> throw new IllegalStateException("Unexpected value: " + bf);
+			}
+		}
 
-            switch (bf) {
-                case EAST, WEST -> loc.addH(1, map.getColumnCount(), bf);//test
-                case NORTH, SOUTH -> loc.addH(-map.getColumnCount(), -1, bf);
-                default -> throw new IllegalStateException("Unexpected value: " + bf);
-            }
-        }
+		return frames;
+	}
 
-        return frames;
-    }
+	public static ItemFrame getMapFrameAt(FlatLocation location, PosterMap map) {
+		Entity[] entities = location.getChunk().getEntities();
 
-    public static ItemFrame getMapFrameAt(FlatLocation location, PosterMap map) {
-        Entity[] entities = location.getChunk().getEntities();
+		for (Entity entity : entities) {
+			if (!(entity instanceof ItemFrame frame)) {
+				continue;
+			}
+			if (WorldUtils.differentLocation(location, entity.getLocation())) {
+				continue;
+			}
+			if (frame.getFacing() != location.getFacing()) {
+				continue;
+			}
+			ItemStack item = frame.getItem();
+			if (item.getType() != Material.FILLED_MAP) {
+				continue;
+			}
+			if (!map.managesMap(item)) {
+				continue;
+			}
+			return frame;
+		}
 
-        for (Entity entity : entities) {
-            if (!(entity instanceof ItemFrame frame)) {
-                continue;
-            }
-            if (WorldUtils.differentLocation(location, entity.getLocation())) {
-                continue;
-            }
-            if (frame.getFacing() != location.getFacing()) {
-                continue;
-            }
-            ItemStack item = frame.getItem();
-            if (item.getType() != Material.FILLED_MAP) {
-                continue;
-            }
-            if (!map.managesMap(item)) {
-                continue;
-            }
-            return frame;
-        }
+		return null;
+	}
 
-        return null;
-    }
+	public static ItemFrame getEmptyFrameAt(Location location, BlockFace facing) {
+		Entity[] entities = location.getChunk().getEntities();
 
-    public static ItemFrame getEmptyFrameAt(Location location, BlockFace facing) {
-        Entity[] entities = location.getChunk().getEntities();
+		for (Entity entity : entities) {
+			if (!(entity instanceof ItemFrame frame)) {
+				continue;
+			}
+			if (WorldUtils.differentLocation(location, entity.getLocation())) {
+				continue;
+			}
+			if (frame.getFacing() != facing) {
+				continue;
+			}
+			ItemStack item = frame.getItem();
+			if (item.getType() != Material.AIR) {
+				continue;
+			}
+			return frame;
+		}
 
-        for (Entity entity : entities) {
-            if (!(entity instanceof ItemFrame frame)) {
-                continue;
-            }
-            if (WorldUtils.differentLocation(location, entity.getLocation())) {
-                continue;
-            }
-            if (frame.getFacing() != facing) {
-                continue;
-            }
-            ItemStack item = frame.getItem();
-            if (item.getType() != Material.AIR) {
-                continue;
-            }
-            return frame;
-        }
+		return null;
+	}
 
-        return null;
-    }
+	public boolean isValid(Player p) {
+		ItemFrame curFrame;
 
-    public boolean isValid(Player p) {
-        ItemFrame curFrame;
+		FlatLocation l = loc1.clone();
 
+		BlockFace bf = WorldUtils.get4thOrientation(p.getLocation());
 
-        FlatLocation l = loc1.clone();
+		l.subtract(loc2);
 
-        BlockFace bf = WorldUtils.get4thOrientation(p.getLocation());
+		int distX = Math.abs(l.getBlockX());
+		int distZ = Math.abs(l.getBlockZ());
 
-        l.subtract(loc2);
+		frames = new ItemFrame[distX * distZ];
+		l = loc1.clone();
+		for (int x = 0; x < distX; x++) {
+			for (int z = 0; z < distZ; z++) {
 
+				curFrame = getEmptyFrameAt(l, l.getFacing());
 
-        int distX = Math.abs(l.getBlockX());
-        int distZ = Math.abs(l.getBlockZ());
+				if (curFrame == null) {
+					return false;
+				}
 
-        frames = new ItemFrame[distX * distZ];
-        l = loc1.clone();
-        for (int x = 0; x < distX; x++) {
-            for (int z = 0; z < distZ; z++) {
+				frames[z * distX + x] = curFrame;
 
-                curFrame = getEmptyFrameAt(l, l.getFacing());
+				switch (bf) {
+				case NORTH, SOUTH -> l.addH(0, 1, bf);
+				case EAST, WEST -> l.addH(1, 0, bf);
+				default -> throw new IllegalStateException("Unexpected value: " + bf);
+				}
+			}
 
-                if (curFrame == null) {
-                    return false;
-                }
+			switch (bf) {
+			case NORTH, SOUTH -> l.addH(1, -distZ, bf);
+			case EAST, WEST -> l.addH(-distZ, 1, bf);
+			default -> throw new IllegalStateException("Unexpected value: " + bf);
+			}
+		}
 
-                frames[z * distX + x] = curFrame;
-
-                switch (bf) {
-                    case NORTH, SOUTH -> l.addH(0, 1, bf);
-                    case EAST, WEST -> l.addH(1, 0, bf);
-                    default -> throw new IllegalStateException("Unexpected value: " + bf);
-                }
-            }
-
-            switch (bf) {
-                case NORTH, SOUTH -> l.addH(1, -distZ, bf);
-                case EAST, WEST -> l.addH(-distZ, 1, bf);
-                default -> throw new IllegalStateException("Unexpected value: " + bf);
-            }
-        }
-
-        return true;
-    }
+		return true;
+	}
 
 }

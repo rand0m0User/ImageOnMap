@@ -45,36 +45,46 @@ import fr.moribus.imageonmap.i18n.I18n;
 
 public final class PluginConfiguration {
 
-    private static final ImageOnMap PLUGIN = ImageOnMap.getPlugin();
+	private static final ImageOnMap PLUGIN = ImageOnMap.getPlugin();
 
-    public static final Supplier<Locale> LANG = () -> I18n.localeFromString(PLUGIN.getConfig().getString("lang", "en-US"));
+	public static final Supplier<Locale> LANG = () -> I18n
+			.localeFromString(PLUGIN.getConfig().getString("lang", "en-US"));
 
-    public static final Supplier<Integer> MAP_GLOBAL_LIMIT = () -> {
-        FileConfiguration config = PLUGIN.getConfig();
-        if (config.isInt("map-global-limit")) {
-            return config.getInt("map-global-limit");
-        }
-        if (config.isInt("Limit-map-by-server")) {
-            return config.getInt("Limit-map-by-server");
-        }
-        return 0;
-    };
+	public static final Supplier<String> BANNED_PDQ_MESSAGE = () -> {
+		FileConfiguration config = PLUGIN.getConfig();
+		if (config.isString("PDQBAN")) {
+			return config.getString("PDQBAN");
+		} else {
+			config.set("PDQBAN", "default");
+		}
+		return "config error";
+	};
+	public static final Supplier<Integer> MAP_GLOBAL_LIMIT = () -> {
+		FileConfiguration config = PLUGIN.getConfig();
+		if (config.isInt("map-global-limit")) {
+			return config.getInt("map-global-limit");
+		}
+		if (config.isInt("Limit-map-by-server")) {
+			return config.getInt("Limit-map-by-server");
+		}
+		return 0;
+	};
 
-    public static final Supplier<Integer> MAP_PLAYER_LIMIT = () -> {
-        FileConfiguration config = PLUGIN.getConfig();
-        if (config.isInt("map-player-limit")) {
-            return config.getInt("map-player-limit");
-        }
-        if (config.isInt("Limit-map-by-player")) {
-            return config.getInt("Limit-map-by-player");
-        }
-        return 0;
-    };
+	public static final Supplier<Integer> MAP_PLAYER_LIMIT = () -> {
+		FileConfiguration config = PLUGIN.getConfig();
+		if (config.isInt("map-player-limit")) {
+			return config.getInt("map-player-limit");
+		}
+		if (config.isInt("Limit-map-by-player")) {
+			return config.getInt("Limit-map-by-player");
+		}
+		return 0;
+	};
 
-    public static final Supplier<Boolean> SAVE_FULL_IMAGE = () -> PLUGIN.getConfig().getBoolean("save-full-image");
+	public static final Supplier<Boolean> SAVE_FULL_IMAGE = () -> PLUGIN.getConfig().getBoolean("save-full-image");
 
-    public static final Supplier<Integer> LIMIT_SIZE_X = () -> PLUGIN.getConfig().getInt("limit-map-size-x");
+	public static final Supplier<Integer> LIMIT_SIZE_X = () -> PLUGIN.getConfig().getInt("limit-map-size-x");
 
-    public static final Supplier<Integer> LIMIT_SIZE_Y = () -> PLUGIN.getConfig().getInt("limit-map-size-y");
+	public static final Supplier<Integer> LIMIT_SIZE_Y = () -> PLUGIN.getConfig().getInt("limit-map-size-y");
 
 }

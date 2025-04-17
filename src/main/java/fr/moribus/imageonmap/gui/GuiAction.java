@@ -36,10 +36,11 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.METHOD})
+@Target({ ElementType.METHOD })
 public @interface GuiAction {
-    /**
-     * The name of the GUI's Action. If not set, takes the method's name automatically.
-     */
-    String value() default "";
+	/**
+	 * The name of the GUI's Action. If not set, takes the method's name
+	 * automatically.
+	 */
+	String value() default "";
 }

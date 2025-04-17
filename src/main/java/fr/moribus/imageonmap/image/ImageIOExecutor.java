@@ -36,12 +36,6 @@
 
 package fr.moribus.imageonmap.image;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import fr.moribus.imageonmap.ImageOnMap;
-import fr.moribus.imageonmap.map.ImageMap;
-import fr.moribus.imageonmap.util.ExceptionCatcher;
-
-import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -49,63 +43,67 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import javax.imageio.ImageIO;
+
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
+
+import fr.moribus.imageonmap.ImageOnMap;
+import fr.moribus.imageonmap.map.ImageMap;
+import fr.moribus.imageonmap.util.ExceptionCatcher;
+
 public class ImageIOExecutor {
 
-    private static final ExecutorService executor = Executors.newFixedThreadPool(
-            Math.min(Runtime.getRuntime().availableProcessors(), 4),
-            new ThreadFactoryBuilder()
-                    .setDaemon(true)
-                    .setNameFormat("Image IO - #%d")
-                    .setUncaughtExceptionHandler(ExceptionCatcher::catchException)
-                    .build()
-    );
+	private static final ExecutorService executor = Executors.newFixedThreadPool(
+			Math.min(Runtime.getRuntime().availableProcessors(), 4),
+			new ThreadFactoryBuilder().setDaemon(true).setNameFormat("Image IO - #%d")
+					.setUncaughtExceptionHandler(ExceptionCatcher::catchException).build());
 
-    @FunctionalInterface
-    interface ExceptionalRunnable {
-        void run() throws Throwable;
-    }
+	@FunctionalInterface
+	interface ExceptionalRunnable {
+		void run() throws Throwable;
+	}
 
-    private static void run(ExceptionalRunnable runnable) {
-        CompletableFuture.runAsync(() -> {
-            try {
-                runnable.run();
-            } catch (Throwable t) {
-                throw new IllegalArgumentException("Error occurred in passed runnable.", t);
-            }
-        }, executor);
-    }
+	private static void run(ExceptionalRunnable runnable) {
+		CompletableFuture.runAsync(() -> {
+			try {
+				runnable.run();
+			} catch (Throwable t) {
+				throw new IllegalArgumentException("Error occurred in passed runnable.", t);
+			}
+		}, executor);
+	}
 
-    public static void loadImage(final Path file, final Renderer mapRenderer) {
-        run(() -> {
-            BufferedImage image = ImageIO.read(file.toFile());
-            mapRenderer.setImage(image);
-            image.flush(); //Safe to free
-        });
-    }
+	public static void loadImage(final Path file, final Renderer mapRenderer) {
+		run(() -> {
+			BufferedImage image = ImageIO.read(file.toFile());
+			mapRenderer.setImage(image);
+			image.flush(); // Safe to free
+		});
+	}
 
-    public static void saveImage(final Path file, final BufferedImage image) {
-        run(() -> ImageIO.write(image, "png", file.toFile()));
-    }
+	public static void saveImage(final Path file, final BufferedImage image) {
+		run(() -> ImageIO.write(image, "png", file.toFile()));
+	}
 
-    public static void saveImage(int mapID, BufferedImage image) {
-        saveImage(ImageOnMap.getPlugin().getImageFile(mapID), image);
-    }
+	public static void saveImage(int mapID, BufferedImage image) {
+		saveImage(ImageOnMap.getPlugin().getImageFile(mapID), image);
+	}
 
-    public static void saveImage(int[] mapsIDs, PosterImage image) {
-        for (int i = 0, c = mapsIDs.length; i < c; i++) {
-            BufferedImage img = image.getImageAt(i);
-            ImageIOExecutor.saveImage(ImageOnMap.getPlugin().getImageFile(mapsIDs[i]), img);
-            img.flush();//Safe to free
-        }
-    }
+	public static void saveImage(int[] mapsIDs, PosterImage image) {
+		for (int i = 0, c = mapsIDs.length; i < c; i++) {
+			BufferedImage img = image.getImageAt(i);
+			ImageIOExecutor.saveImage(ImageOnMap.getPlugin().getImageFile(mapsIDs[i]), img);
+			img.flush();// Safe to free
+		}
+	}
 
-    public static void deleteImage(ImageMap map) {
-        for (int mapsID : map.getMapsIDs()) {
-            deleteImage(ImageOnMap.getPlugin().getImageFile(mapsID));
-        }
-    }
+	public static void deleteImage(ImageMap map) {
+		for (int mapsID : map.getMapsIDs()) {
+			deleteImage(ImageOnMap.getPlugin().getImageFile(mapsID));
+		}
+	}
 
-    public static void deleteImage(Path file) {
-        run(() -> Files.delete(file));
-    }
+	public static void deleteImage(Path file) {
+		run(() -> Files.delete(file));
+	}
 }

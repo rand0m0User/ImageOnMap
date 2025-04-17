@@ -36,109 +36,100 @@
 
 package fr.moribus.imageonmap.image;
 
-import fr.moribus.imageonmap.ImageOnMap;
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
+
+import fr.moribus.imageonmap.ImageOnMap;
 
 /**
  * Various image-related utilities
  */
 public class ImageUtils {
 
-    /**
-     * Generates a resized buffer of the given source
-     *
-     * @param source       The source buffer to draw
-     * @param destinationW resize width
-     * @param destinationH resize height
-     * @return The new buffer, with the source buffer drawn on it
-     */
-    private static BufferedImage resize(BufferedImage source, int destinationW, int destinationH, boolean covered) {
-        float ratioW = (float) destinationW / (float) source.getWidth();
-        float ratioH = (float) destinationH / (float) source.getHeight();
-        int finalW;
-        int finalH;
-        int x;
-        int y;
+	/**
+	 * Generates a resized buffer of the given source
+	 *
+	 * @param source       The source buffer to draw
+	 * @param destinationW resize width
+	 * @param destinationH resize height
+	 * @return The new buffer, with the source buffer drawn on it
+	 */
+	private static BufferedImage resize(BufferedImage source, int destinationW, int destinationH, boolean covered) {
+		float ratioW = (float) destinationW / (float) source.getWidth();
+		float ratioH = (float) destinationH / (float) source.getHeight();
+		int finalW;
+		int finalH;
+		int x;
+		int y;
 
-        if (covered ? ratioW > ratioH : ratioW < ratioH) {
-            finalW = destinationW;
-            finalH = (int) (source.getHeight() * ratioW);
-        } else {
-            finalW = (int) (source.getWidth() * ratioH);
-            finalH = destinationH;
-        }
+		if (covered ? ratioW > ratioH : ratioW < ratioH) {
+			finalW = destinationW;
+			finalH = (int) (source.getHeight() * ratioW);
+		} else {
+			finalW = (int) (source.getWidth() * ratioH);
+			finalH = destinationH;
+		}
 
-        x = (destinationW - finalW) / 2;
-        y = (destinationH - finalH) / 2;
+		x = (destinationW - finalW) / 2;
+		y = (destinationH - finalH) / 2;
 
-        return drawImage(source,
-                destinationW, destinationH,
-                x, y, finalW, finalH);
-    }
+		return drawImage(source, destinationW, destinationH, x, y, finalW, finalH);
+	}
 
-    /**
-     * @param source       The source buffer to draw
-     * @param destinationW resize width
-     * @param destinationH resize height
-     * @return The new buffer, with the source buffer drawn on it
-     */
-    private static BufferedImage resizeStretched(BufferedImage source, int destinationW, int destinationH) {
-        return drawImage(source,
-                destinationW, destinationH,
-                0, 0, destinationW, destinationH);
-    }
+	/**
+	 * @param source       The source buffer to draw
+	 * @param destinationW resize width
+	 * @param destinationH resize height
+	 * @return The new buffer, with the source buffer drawn on it
+	 */
+	private static BufferedImage resizeStretched(BufferedImage source, int destinationW, int destinationH) {
+		return drawImage(source, destinationW, destinationH, 0, 0, destinationW, destinationH);
+	}
 
-    /**
-     * Draws the source image on a new buffer, and returns it.
-     * The source buffer can be drawn at any size and position in the new buffer.
-     *
-     * @param source  The source buffer to draw
-     * @param bufferW The width of the new buffer
-     * @param bufferH The height of the new buffer
-     * @param posX    The X position of the source buffer
-     * @param posY    The Y position of the source buffer
-     * @param sourceW The width of the source buffer
-     * @param sourceH The height of the source buffer
-     * @return The new buffer, with the source buffer drawn on it
-     */
-    private static BufferedImage drawImage(BufferedImage source,
-                                           int bufferW, int bufferH,
-                                           int posX, int posY,
-                                           int sourceW, int sourceH) {
-        Graphics graphics;
-        BufferedImage newImage = null;
-        try {
-            newImage = new BufferedImage(bufferW, bufferH, BufferedImage.TYPE_INT_ARGB);
+	/**
+	 * Draws the source image on a new buffer, and returns it. The source buffer can
+	 * be drawn at any size and position in the new buffer.
+	 *
+	 * @param source  The source buffer to draw
+	 * @param bufferW The width of the new buffer
+	 * @param bufferH The height of the new buffer
+	 * @param posX    The X position of the source buffer
+	 * @param posY    The Y position of the source buffer
+	 * @param sourceW The width of the source buffer
+	 * @param sourceH The height of the source buffer
+	 * @return The new buffer, with the source buffer drawn on it
+	 */
+	private static BufferedImage drawImage(BufferedImage source, int bufferW, int bufferH, int posX, int posY,
+			int sourceW, int sourceH) {
+		Graphics graphics;
+		BufferedImage newImage = null;
+		try {
+			newImage = new BufferedImage(bufferW, bufferH, BufferedImage.TYPE_INT_ARGB);
 
-            graphics = newImage.getGraphics();
-            graphics.drawImage(source, posX, posY, sourceW, sourceH, null);
+			graphics = newImage.getGraphics();
+			graphics.drawImage(source, posX, posY, sourceW, sourceH, null);
 
-            return newImage;
-        } catch (final Throwable e) {
-            ImageOnMap.getPlugin().getLogger().warning("Exception/error at drawImage");
-            if (newImage != null) {
-                newImage.flush();//Safe to free
-            }
-            throw e;
-        }
+			return newImage;
+		} catch (final Throwable e) {
+			ImageOnMap.getPlugin().getLogger().warning("Exception/error at drawImage");
+			if (newImage != null) {
+				newImage.flush();// Safe to free
+			}
+			throw e;
+		}
 
-    }
+	}
 
-    public enum ScalingType {
-        NONE,
-        CONTAINED,
-        COVERED,
-        STRETCHED,
-        ;
+	public enum ScalingType {
+		NONE, CONTAINED, COVERED, STRETCHED,;
 
-        public BufferedImage resize(BufferedImage source, int destinationW, int destinationH) {
-            return switch (this) {
-                case CONTAINED -> ImageUtils.resize(source, destinationW, destinationH, false);
-                case COVERED -> ImageUtils.resize(source, destinationW, destinationH, true);
-                case STRETCHED -> resizeStretched(source, destinationW, destinationH);
-                default -> source;
-            };
-        }
-    }
+		public BufferedImage resize(BufferedImage source, int destinationW, int destinationH) {
+			return switch (this) {
+			case CONTAINED -> ImageUtils.resize(source, destinationW, destinationH, false);
+			case COVERED -> ImageUtils.resize(source, destinationW, destinationH, true);
+			case STRETCHED -> resizeStretched(source, destinationW, destinationH);
+			default -> source;
+			};
+		}
+	}
 }

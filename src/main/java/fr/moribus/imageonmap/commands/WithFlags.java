@@ -37,16 +37,15 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-
 /**
  * Adds this annotation to a command class to make it accept flags.
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.TYPE})
+@Target({ ElementType.TYPE })
 public @interface WithFlags {
 
-    /**
-     * The name of the flags.
-     */
-    String[] value() default {};
+	/**
+	 * The name of the flags.
+	 */
+	String[] value() default {};
 }

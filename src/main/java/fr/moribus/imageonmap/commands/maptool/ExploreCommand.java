@@ -36,57 +36,56 @@
 
 package fr.moribus.imageonmap.commands.maptool;
 
-
-import fr.moribus.imageonmap.Permissions;
-import fr.moribus.imageonmap.commands.IoMCommand;
-import fr.moribus.imageonmap.gui.MapListGui;
-import fr.moribus.imageonmap.i18n.I;
-import fr.moribus.imageonmap.commands.CommandException;
-import fr.moribus.imageonmap.commands.CommandInfo;
-import fr.moribus.imageonmap.gui.Gui;
-
 import java.util.ArrayList;
+
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import fr.moribus.imageonmap.Permissions;
+import fr.moribus.imageonmap.commands.CommandException;
+import fr.moribus.imageonmap.commands.CommandInfo;
+import fr.moribus.imageonmap.commands.IoMCommand;
+import fr.moribus.imageonmap.gui.Gui;
+import fr.moribus.imageonmap.gui.MapListGui;
+import fr.moribus.imageonmap.i18n.I;
 
 @CommandInfo(name = "explore", usageParameters = "[player name]")
 public class ExploreCommand extends IoMCommand {
-    @Override
-    protected void run() throws CommandException {
-        ArrayList<String> arguments = getArgs();
-        if (arguments.size() > 1) {
-            throwInvalidArgument(I.t("Too many parameters!"));
-            return;
-        }
-        final String playerName;
+	@Override
+	protected void run() throws CommandException {
+		ArrayList<String> arguments = getArgs();
+		if (arguments.size() > 1) {
+			throwInvalidArgument(I.t("Too many parameters!"));
+			return;
+		}
+		final String playerName;
 
-        final Player sender = playerSender();
-        if (arguments.size() == 1) {
-            if (!Permissions.LISTOTHER.grantedTo(sender)) {
-                throwNotAuthorized();
-                return;
-            }
-            playerName = arguments.get(0);
-        } else {
-            playerName = sender.getName();
-        }
+		final Player sender = playerSender();
+		if (arguments.size() == 1) {
+			if (!Permissions.LISTOTHER.grantedTo(sender)) {
+				throwNotAuthorized();
+				return;
+			}
+			playerName = arguments.get(0);
+		} else {
+			playerName = sender.getName();
+		}
 
-        retrieveUUID(playerName, uuid -> {
+		retrieveUUID(playerName, uuid -> {
 
-            OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(uuid);
-            if (sender.isOnline()) {
-                Gui.open(sender, new MapListGui(offlinePlayer, playerName));
-            }
+			OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(uuid);
+			if (sender.isOnline()) {
+				Gui.open(sender, new MapListGui(offlinePlayer, playerName));
+			}
 
-        });
+		});
 
-    }
+	}
 
-    @Override
-    public boolean canExecute(CommandSender sender) {
-        return Permissions.LIST.grantedTo(sender);
-    }
+	@Override
+	public boolean canExecute(CommandSender sender) {
+		return Permissions.LIST.grantedTo(sender);
+	}
 }

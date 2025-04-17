@@ -36,83 +36,80 @@
 
 package fr.moribus.imageonmap.commands.maptool;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
+
 import fr.moribus.imageonmap.Permissions;
+import fr.moribus.imageonmap.commands.CommandException;
+import fr.moribus.imageonmap.commands.CommandInfo;
 import fr.moribus.imageonmap.commands.IoMCommand;
 import fr.moribus.imageonmap.i18n.I;
 import fr.moribus.imageonmap.map.ImageMap;
 import fr.moribus.imageonmap.map.MapManager;
-import fr.moribus.imageonmap.commands.CommandException;
-import fr.moribus.imageonmap.commands.CommandInfo;
 
-import java.util.ArrayList;
-import java.util.List;
-import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
-
-@CommandInfo(name = "get",usageParameters = "[player name]:<map name>")
+@CommandInfo(name = "get", usageParameters = "[player name]:<map name>")
 public class GetCommand extends IoMCommand {
-    @Override
-    protected void run() throws CommandException {
-        ArrayList<String> arguments = getArgs();
+	@Override
+	protected void run() throws CommandException {
+		ArrayList<String> arguments = getArgs();
 
-        if (arguments.size() > 2) {
-            throwInvalidArgument(I.t("Too many parameters!"));
-            return;
-        }
-        if (arguments.size() < 1) {
-            throwInvalidArgument(I.t("Too few parameters!"));
-            return;
-        }
-        final String playerName;
-        final String mapName;
-        final Player sender = playerSender();
+		if (arguments.size() > 2) {
+			throwInvalidArgument(I.t("Too many parameters!"));
+			return;
+		}
+		if (arguments.size() < 1) {
+			throwInvalidArgument(I.t("Too few parameters!"));
+			return;
+		}
+		final String playerName;
+		final String mapName;
+		final Player sender = playerSender();
 
-        if (arguments.size() == 1) {
-            playerName = sender.getName();
-            mapName = arguments.get(0);
-        } else {
-            if (!Permissions.GETOTHER.grantedTo(sender)) {
-                throwNotAuthorized();
-                return;
-            }
-            playerName = arguments.get(0);
-            mapName = arguments.get(1);
-        }
+		if (arguments.size() == 1) {
+			playerName = sender.getName();
+			mapName = arguments.get(0);
+		} else {
+			if (!Permissions.GETOTHER.grantedTo(sender)) {
+				throwNotAuthorized();
+				return;
+			}
+			playerName = arguments.get(0);
+			mapName = arguments.get(1);
+		}
 
+		retrieveUUID(playerName, uuid -> {
 
+			if (!sender.isOnline()) {
+				return;
+			}
 
+			ImageMap map = MapManager.getMap(uuid, mapName);
 
+			if (map == null) {
+				warning(sender, I.t("This map does not exist."));
+				return;
+			}
 
-        retrieveUUID(playerName, uuid -> {
+			if (map.give(sender)) {
+				info(I.t("The requested map was too big to fit in your inventory."));
+				info(I.t("Use '/maptool getremaining' to get the remaining maps."));
+			}
+		});
+	}
 
-            if (!sender.isOnline()) {
-                return;
-            }
+	@Override
+	protected List<String> complete() throws CommandException {
+		if (args.length == 1) {
+			return getMatchingMapNames(playerSender(), args[0]);
+		}
+		return null;
+	}
 
-            ImageMap map = MapManager.getMap(uuid, mapName);
-
-            if (map == null) {
-                warning(sender, I.t("This map does not exist."));
-                return;
-            }
-
-            if (map.give(sender)) {
-                info(I.t("The requested map was too big to fit in your inventory."));
-                info(I.t("Use '/maptool getremaining' to get the remaining maps."));
-            }
-        });
-    }
-
-    @Override
-    protected List<String> complete() throws CommandException {
-        if (args.length == 1) {
-            return getMatchingMapNames(playerSender(), args[0]);
-        }
-        return null;
-    }
-
-    @Override
-    public boolean canExecute(CommandSender sender) {
-        return Permissions.GET.grantedTo(sender);
-    }
+	@Override
+	public boolean canExecute(CommandSender sender) {
+		return Permissions.GET.grantedTo(sender);
+	}
 }

@@ -36,39 +36,39 @@
 
 package fr.moribus.imageonmap.commands.maptool;
 
-import fr.moribus.imageonmap.Permissions;
-import fr.moribus.imageonmap.commands.IoMCommand;
-import fr.moribus.imageonmap.i18n.I;
-import fr.moribus.imageonmap.ui.MapItemManager;
-import fr.moribus.imageonmap.commands.CommandException;
-import fr.moribus.imageonmap.commands.CommandInfo;
-
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-@CommandInfo(name = "getremaining", aliases = {"getrest"})
+import fr.moribus.imageonmap.Permissions;
+import fr.moribus.imageonmap.commands.CommandException;
+import fr.moribus.imageonmap.commands.CommandInfo;
+import fr.moribus.imageonmap.commands.IoMCommand;
+import fr.moribus.imageonmap.i18n.I;
+import fr.moribus.imageonmap.ui.MapItemManager;
+
+@CommandInfo(name = "getremaining", aliases = { "getrest" })
 public class GetRemainingCommand extends IoMCommand {
-    @Override
-    protected void run() throws CommandException {
-        Player player = playerSender();
+	@Override
+	protected void run() throws CommandException {
+		Player player = playerSender();
 
-        if (MapItemManager.getCacheSize(player) <= 0) {
-            info(I.t("You have no remaining map."));
-            return;
-        }
+		if (MapItemManager.getCacheSize(player) <= 0) {
+			info(I.t("You have no remaining map."));
+			return;
+		}
 
-        int givenMaps = MapItemManager.giveCache(player);
+		int givenMaps = MapItemManager.giveCache(player);
 
-        if (givenMaps == 0) {
-            error(I.t("Your inventory is full! Make some space before requesting the remaining maps."));
-        } else {
-            info(I.tn("There is {0} map remaining.", "There are {0} maps remaining.",
-                    MapItemManager.getCacheSize(player)));
-        }
-    }
+		if (givenMaps == 0) {
+			error(I.t("Your inventory is full! Make some space before requesting the remaining maps."));
+		} else {
+			info(I.tn("There is {0} map remaining.", "There are {0} maps remaining.",
+					MapItemManager.getCacheSize(player)));
+		}
+	}
 
-    @Override
-    public boolean canExecute(CommandSender sender) {
-        return Permissions.NEW.grantedTo(sender) || Permissions.GET.grantedTo(sender);
-    }
+	@Override
+	public boolean canExecute(CommandSender sender) {
+		return Permissions.NEW.grantedTo(sender) || Permissions.GET.grantedTo(sender);
+	}
 }

@@ -38,45 +38,46 @@ package fr.moribus.imageonmap.map;
 
 import java.util.Map;
 import java.util.UUID;
+
 import org.bukkit.configuration.InvalidConfigurationException;
 
 public class SingleMap extends ImageMap {
-    protected final int mapID;
+	protected final int mapID;
 
-    public SingleMap(UUID ownerUUID, int mapID, String id, String name) {
-        super(ownerUUID, Type.SINGLE, id, name);
-        this.mapID = mapID;
-    }
+	public SingleMap(UUID ownerUUID, int mapID, String id, String name, String hash_PDQ) {
+		super(ownerUUID, Type.SINGLE, id, name, hash_PDQ);
+		this.mapID = mapID;
+	}
 
-    public SingleMap(UUID ownerUUID, int mapID) {
-        this(ownerUUID, mapID, null, null);
-    }
+	public SingleMap(UUID ownerUUID, int mapID, String hash_PDQ) {
+		this(ownerUUID, mapID, null, null, hash_PDQ);
+	}
 
-    public SingleMap(Map<String, Object> map, UUID userUUID) throws InvalidConfigurationException {
-        super(map, userUUID, Type.SINGLE);
-        mapID = getFieldValue(map, "mapID");
-    }
+	public SingleMap(Map<String, Object> map, UUID userUUID) throws InvalidConfigurationException {
+		super(map, userUUID, Type.SINGLE);
+		mapID = getFieldValue(map, "mapID");
+	}
 
-    @Override
-    public int[] getMapsIDs() {
-        return new int[] {mapID};
-    }
+	@Override
+	public int[] getMapsIDs() {
+		return new int[] { mapID };
+	}
 
-    @Override
-    public boolean managesMap(int mapID) {
-        return this.mapID == mapID;
-    }
+	@Override
+	public boolean managesMap(int mapID) {
+		return this.mapID == mapID;
+	}
 
-    /* ====== Serialization methods ====== */
+	/* ====== Serialization methods ====== */
 
-    @Override
-    public int getMapCount() {
-        return 1;
-    }
+	@Override
+	public int getMapCount() {
+		return 1;
+	}
 
-    @Override
-    protected void postSerialize(Map<String, Object> map) {
-        map.put("mapID", mapID);
-    }
+	@Override
+	protected void postSerialize(Map<String, Object> map) {
+		map.put("mapID", mapID);
+	}
 
 }

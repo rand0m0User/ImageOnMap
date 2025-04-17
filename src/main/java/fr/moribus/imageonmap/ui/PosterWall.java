@@ -36,9 +36,6 @@
 
 package fr.moribus.imageonmap.ui;
 
-import fr.moribus.imageonmap.map.PosterMap;
-import fr.zcraft.quartzlib.tools.world.FlatLocation;
-import fr.zcraft.quartzlib.tools.world.WorldUtils;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.BlockFace;
@@ -46,114 +43,118 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.ItemFrame;
 import org.bukkit.inventory.ItemStack;
 
+import fr.moribus.imageonmap.map.PosterMap;
+import fr.zcraft.quartzlib.tools.world.FlatLocation;
+import fr.zcraft.quartzlib.tools.world.WorldUtils;
+
 public class PosterWall {
 
-    public FlatLocation loc1;
-    public FlatLocation loc2;
+	public FlatLocation loc1;
+	public FlatLocation loc2;
 
-    public ItemFrame[] frames;
+	public ItemFrame[] frames;
 
-    public static ItemFrame[] getMatchingMapFrames(PosterMap map, FlatLocation location, int mapId) {
-        int mapIndex = map.getIndex(mapId);
-        int x = map.getColumnAt(mapIndex);
-        int y = map.getRowAt(mapIndex);
+	public static ItemFrame[] getMatchingMapFrames(PosterMap map, FlatLocation location, int mapId) {
+		int mapIndex = map.getIndex(mapId);
+		int x = map.getColumnAt(mapIndex);
+		int y = map.getRowAt(mapIndex);
 
-        return getMatchingMapFrames(map, location.clone().add(-x, y));
-    }
+		return getMatchingMapFrames(map, location.clone().add(-x, y));
+	}
 
-    public static ItemFrame[] getMatchingMapFrames(PosterMap map, FlatLocation location) {
-        ItemFrame[] frames = new ItemFrame[map.getMapCount()];
-        FlatLocation loc = location.clone();
+	public static ItemFrame[] getMatchingMapFrames(PosterMap map, FlatLocation location) {
+		ItemFrame[] frames = new ItemFrame[map.getMapCount()];
+		FlatLocation loc = location.clone();
 
-        for (int y = 0; y < map.getRowCount(); ++y) {
-            for (int x = 0; x < map.getColumnCount(); ++x) {
-                int mapIndex = map.getIndexAt(x, y);
-                ItemFrame frame = getMapFrameAt(loc, map);
-                if (frame != null) {
-                    frames[mapIndex] = frame;
-                }
-                loc.add(1, 0);
-            }
-            loc.setX(location.getX());
-            loc.setZ(location.getZ());
-            loc.add(0, -1);
-        }
+		for (int y = 0; y < map.getRowCount(); ++y) {
+			for (int x = 0; x < map.getColumnCount(); ++x) {
+				int mapIndex = map.getIndexAt(x, y);
+				ItemFrame frame = getMapFrameAt(loc, map);
+				if (frame != null) {
+					frames[mapIndex] = frame;
+				}
+				loc.add(1, 0);
+			}
+			loc.setX(location.getX());
+			loc.setZ(location.getZ());
+			loc.add(0, -1);
+		}
 
-        return frames;
-    }
+		return frames;
+	}
 
-    public static ItemFrame getMapFrameAt(FlatLocation location, PosterMap map) {
-        Entity[] entities = location.getChunk().getEntities();
+	public static ItemFrame getMapFrameAt(FlatLocation location, PosterMap map) {
+		Entity[] entities = location.getChunk().getEntities();
 
-        for (Entity entity : entities) {
-            if (!(entity instanceof ItemFrame frame)) {
-                continue;
-            }
-            if (WorldUtils.differentLocation(location, entity.getLocation())) {
-                continue;
-            }
-            if (frame.getFacing() != location.getFacing()) {
-                continue;
-            }
-            ItemStack item = frame.getItem();
-            if (item.getType() != Material.FILLED_MAP) {
-                continue;
-            }
-            if (!map.managesMap(item)) {
-                continue;
-            }
-            return frame;
-        }
+		for (Entity entity : entities) {
+			if (!(entity instanceof ItemFrame frame)) {
+				continue;
+			}
+			if (WorldUtils.differentLocation(location, entity.getLocation())) {
+				continue;
+			}
+			if (frame.getFacing() != location.getFacing()) {
+				continue;
+			}
+			ItemStack item = frame.getItem();
+			if (item.getType() != Material.FILLED_MAP) {
+				continue;
+			}
+			if (!map.managesMap(item)) {
+				continue;
+			}
+			return frame;
+		}
 
-        return null;
-    }
+		return null;
+	}
 
-    public static ItemFrame getEmptyFrameAt(Location location, BlockFace facing) {
-        Entity[] entities = location.getChunk().getEntities();
+	public static ItemFrame getEmptyFrameAt(Location location, BlockFace facing) {
+		Entity[] entities = location.getChunk().getEntities();
 
-        for (Entity entity : entities) {
-            if (!(entity instanceof ItemFrame frame)) {
-                continue;
-            }
-            if (WorldUtils.differentLocation(location, entity.getLocation())) {
-                continue;
-            }
-            if (frame.getFacing() != facing) {
-                continue;
-            }
-            ItemStack item = frame.getItem();
-            if (item.getType() != Material.AIR) {
-                continue;
-            }
-            return frame;
-        }
+		for (Entity entity : entities) {
+			if (!(entity instanceof ItemFrame frame)) {
+				continue;
+			}
+			if (WorldUtils.differentLocation(location, entity.getLocation())) {
+				continue;
+			}
+			if (frame.getFacing() != facing) {
+				continue;
+			}
+			ItemStack item = frame.getItem();
+			if (item.getType() != Material.AIR) {
+				continue;
+			}
+			return frame;
+		}
 
-        return null;
-    }
+		return null;
+	}
 
-    public boolean isValid() {
-        ItemFrame curFrame;
-        FlatLocation bottomLeft = FlatLocation.minMerged(loc1, loc2);
-        FlatLocation loc = bottomLeft.clone();
+	public boolean isValid() {
+		ItemFrame curFrame;
+		FlatLocation bottomLeft = FlatLocation.minMerged(loc1, loc2);
+		FlatLocation loc = bottomLeft.clone();
 
-        int distX = FlatLocation.flatBlockDistanceX(loc1, loc2);
-        int distY = FlatLocation.flatBlockDistanceY(loc1, loc2);
+		int distX = FlatLocation.flatBlockDistanceX(loc1, loc2);
+		int distY = FlatLocation.flatBlockDistanceY(loc1, loc2);
 
-        frames = new ItemFrame[distX * distY];
+		frames = new ItemFrame[distX * distY];
 
-        for (int x = 0; x < distX; x++) {
-            for (int y = 0; y < distY; y++) {
-                curFrame = getEmptyFrameAt(loc, loc.getFacing());
-                if (curFrame == null) {
-                    return false;
-                }
-                frames[y * distX + x] = curFrame;
-                loc.add(0, 1);
-            }
-            loc.add(1, 0);
-            loc.setY(bottomLeft.getY());
-        }
+		for (int x = 0; x < distX; x++) {
+			for (int y = 0; y < distY; y++) {
+				curFrame = getEmptyFrameAt(loc, loc.getFacing());
+				if (curFrame == null) {
+					return false;
+				}
+				frames[y * distX + x] = curFrame;
+				loc.add(0, 1);
+			}
+			loc.add(1, 0);
+			loc.setY(bottomLeft.getY());
+		}
 
-        return true;
-    }
+		return true;
+	}
 }

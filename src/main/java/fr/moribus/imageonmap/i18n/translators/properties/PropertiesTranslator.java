@@ -39,92 +39,94 @@ import fr.moribus.imageonmap.i18n.I18n;
 import fr.moribus.imageonmap.i18n.translators.Translation;
 import fr.moribus.imageonmap.i18n.translators.Translator;
 
-
 /**
- * Loads translations stored in a .properties or .class file, using Java native {@link
- * ResourceBundle resource bundles}.
+ * Loads translations stored in a .properties or .class file, using Java native
+ * {@link ResourceBundle resource bundles}.
  *
- * <p>The file are loaded from the file system instead of the JAR file, to allow end-user
- * changes.</p>
+ * <p>
+ * The file are loaded from the file system instead of the JAR file, to allow
+ * end-user changes.
+ * </p>
  *
  * <ul>
  *
- *     <li>
- *         This translator <strong>does not</strong> support plurals. If plurals are used, the first
- *         string will always be used, and the other, ignored.
- *     </li>
+ * <li>This translator <strong>does not</strong> support plurals. If plurals are
+ * used, the first string will always be used, and the other, ignored.</li>
  *
- *     <li>
- *         This translator <strong>does not</strong> support contexts. If a context is provided, it is
- *         simply ignored.
- *     </li>
+ * <li>This translator <strong>does not</strong> support contexts. If a context
+ * is provided, it is simply ignored.</li>
  *
  * </ul>
  *
  *
  * <h3>Special keys</h3>
  *
- * <p>Some keys have a special meaning:</p>
+ * <p>
+ * Some keys have a special meaning:
+ * </p>
  *
  * <ul>
- *     <li>{@code meta-author}: the translator;</li>
- *     <li>{@code meta-team}: the translation team;</li>
- *     <li>{@code meta-reports}: the person to contact if translation errors are found.</li>
+ * <li>{@code meta-author}: the translator;</li>
+ * <li>{@code meta-team}: the translation team;</li>
+ * <li>{@code meta-reports}: the person to contact if translation errors are
+ * found.</li>
  * </ul>
  *
- * <p>If you need these keys in your properties files, you can add the {@code quartzlib-i18n-no-metadata}
- * key in the file somewhere, with a non-empty value. The keys above will in this case no longer be
- * special.</p>
+ * <p>
+ * If you need these keys in your properties files, you can add the
+ * {@code quartzlib-i18n-no-metadata} key in the file somewhere, with a
+ * non-empty value. The keys above will in this case no longer be special.
+ * </p>
  */
 public class PropertiesTranslator extends Translator {
-    private static final String METADATA_DISABLED = "quartzlib-i18n-no-metadata";
-    private static final String METADATA_AUTHOR = "meta-author";
-    private static final String METADATA_TEAM = "meta-team";
-    private static final String METADATA_REPORTS = "meta-reports";
+	private static final String METADATA_DISABLED = "quartzlib-i18n-no-metadata";
+	private static final String METADATA_AUTHOR = "meta-author";
+	private static final String METADATA_TEAM = "meta-team";
+	private static final String METADATA_REPORTS = "meta-reports";
 
-    public PropertiesTranslator(Locale locale, File file) {
-        super(locale, file);
-    }
+	public PropertiesTranslator(Locale locale, File file) {
+		super(locale, file);
+	}
 
-    public PropertiesTranslator(Locale locale, String resourceReference) {
-        super(locale, resourceReference);
-    }
+	public PropertiesTranslator(Locale locale, String resourceReference) {
+		super(locale, resourceReference);
+	}
 
-    @Override
-    protected void load() {
-        final ZLibResourceBundleControl control =
-                file != null ? new ZLibResourceBundleControl(file) : new ZLibResourceBundleControl(resourceReference);
+	@Override
+	protected void load() {
+		final ZLibResourceBundleControl control = file != null ? new ZLibResourceBundleControl(file)
+				: new ZLibResourceBundleControl(resourceReference);
 
-        final ResourceBundle bundle =
-                ResourceBundle.getBundle(control.toBundleName(I18n.getI18nDirectory(), locale), locale, control);
-        final boolean disableMetadata = bundle.containsKey(METADATA_DISABLED);
+		final ResourceBundle bundle = ResourceBundle.getBundle(control.toBundleName(I18n.getI18nDirectory(), locale),
+				locale, control);
+		final boolean disableMetadata = bundle.containsKey(METADATA_DISABLED);
 
-        for (final String key : bundle.keySet()) {
-            final String value = bundle.getString(key);
+		for (final String key : bundle.keySet()) {
+			final String value = bundle.getString(key);
 
-            if (disableMetadata) {
-                if (!key.equals(METADATA_DISABLED)) {
-                    registerTranslation(new Translation(null, key, Collections.singletonList(value)));
-                }
-            } else {
-                switch (key) {
-                    case METADATA_AUTHOR, METADATA_TEAM, METADATA_REPORTS, METADATA_DISABLED:
-                        break;
-                    default:
-                        registerTranslation(new Translation(null, key, Collections.singletonList(value)));
-                        break;
-                }
-            }
-        }
-    }
+			if (disableMetadata) {
+				if (!key.equals(METADATA_DISABLED)) {
+					registerTranslation(new Translation(null, key, Collections.singletonList(value)));
+				}
+			} else {
+				switch (key) {
+				case METADATA_AUTHOR, METADATA_TEAM, METADATA_REPORTS, METADATA_DISABLED:
+					break;
+				default:
+					registerTranslation(new Translation(null, key, Collections.singletonList(value)));
+					break;
+				}
+			}
+		}
+	}
 
-    /**
-     * The context should always be ignored.
-     * <p>
-     * {@inheritDoc}
-     */
-    @Override
-    protected String getContextKey(String context) {
-        return NO_CONTEXT_KEY;
-    }
+	/**
+	 * The context should always be ignored.
+	 * <p>
+	 * {@inheritDoc}
+	 */
+	@Override
+	protected String getContextKey(String context) {
+		return NO_CONTEXT_KEY;
+	}
 }

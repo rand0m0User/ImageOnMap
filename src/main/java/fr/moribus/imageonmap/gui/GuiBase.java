@@ -30,8 +30,6 @@
 
 package fr.moribus.imageonmap.gui;
 
-import fr.moribus.imageonmap.ImageOnMap;
-import fr.moribus.imageonmap.i18n.I18n;
 import java.util.Locale;
 
 import org.bukkit.Bukkit;
@@ -39,139 +37,147 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 
+import fr.moribus.imageonmap.ImageOnMap;
+import fr.moribus.imageonmap.i18n.I18n;
+
 public abstract class GuiBase {
-    /**
-     * The player this Gui instance is associated to.
-     */
-    private Player player;
+	/**
+	 * The player this Gui instance is associated to.
+	 */
+	private Player player;
 
-    /**
-     * The locale used by the player this Gui instance is associated to.
-     */
-    private Locale playerLocale;
+	/**
+	 * The locale used by the player this Gui instance is associated to.
+	 */
+	private Locale playerLocale;
 
-    /**
-     * The parent of this GUI (if any).
-     */
-    private GuiBase parent;
+	/**
+	 * The parent of this GUI (if any).
+	 */
+	private GuiBase parent;
 
-    /**
-     * The event listener for this GUI.
-     */
-    private Listener listener;
+	/**
+	 * The event listener for this GUI.
+	 */
+	private Listener listener;
 
-    /**
-     * If the inventory is currently open.
-     */
-    private boolean open = false;
+	/**
+	 * If the inventory is currently open.
+	 */
+	private boolean open = false;
 
-    /* ===== Public API ===== */
+	/* ===== Public API ===== */
 
-    /**
-     * Asks the GUI to update its data, and refresh its view accordingly.
-     */
-    public void update() {
-        onUpdate();
-        onAfterUpdate();
-    }
+	/**
+	 * Asks the GUI to update its data, and refresh its view accordingly.
+	 */
+	public void update() {
+		onUpdate();
+		onAfterUpdate();
+	}
 
-    /**
-     * Closes this inventory.
-     */
-    public void close() {
-        registerClose();
+	/**
+	 * Closes this inventory.
+	 */
+	public void close() {
+		registerClose();
 
-        if (parent != null) {
-            Gui.open(player, parent);
-        }
-    }
+		if (parent != null) {
+			Gui.open(player, parent);
+		}
+	}
 
-    void registerClose() {
-        if (!open) {
-            return;
-        }
-        open = false;
-        Gui.registerGuiClose(this);
+	void registerClose() {
+		if (!open) {
+			return;
+		}
+		open = false;
+		Gui.registerGuiClose(this);
 
-        if (listener != null) {
-            HandlerList.unregisterAll(listener);
-        }
+		if (listener != null) {
+			HandlerList.unregisterAll(listener);
+		}
 
-    }
+	}
 
-    /* ===== Protected API ===== */
+	/* ===== Protected API ===== */
 
-    /**
-     * Raised when the {@link GuiBase#update()} method is called.
-     * Use this method to update your internal data.
-     */
-    protected void onUpdate() {
-    }
+	/**
+	 * Raised when the {@link GuiBase#update()} method is called. Use this method to
+	 * update your internal data.
+	 */
+	protected void onUpdate() {
+	}
 
-    /**
-     * Raised when the {@link GuiBase#update()} method is called, but before the inventory is populated.
-     * Use this method in a Gui subclass to analyze given data and set other parameters accordingly.
-     */
-    protected void onAfterUpdate() {
-    }
+	/**
+	 * Raised when the {@link GuiBase#update()} method is called, but before the
+	 * inventory is populated. Use this method in a Gui subclass to analyze given
+	 * data and set other parameters accordingly.
+	 */
+	protected void onAfterUpdate() {
+	}
 
-    protected Listener getEventListener() {
-        return null;
-    }
+	protected Listener getEventListener() {
+		return null;
+	}
 
-    protected void open(Player player) {
-        this.player = player;
-        this.playerLocale = I18n.getPlayerLocale(player);
-        Gui.registerGuiOpen(player, this);
-        update();
-        if (listener == null) {
-            listener = getEventListener();
-        }
-        if (listener != null) {
-            Bukkit.getPluginManager().registerEvents(listener, ImageOnMap.getPlugin());
-        }
-        open = true;
-    }
+	protected void open(Player player) {
+		this.player = player;
+		this.playerLocale = I18n.getPlayerLocale(player);
+		Gui.registerGuiOpen(player, this);
+		update();
+		if (listener == null) {
+			listener = getEventListener();
+		}
+		if (listener != null) {
+			Bukkit.getPluginManager().registerEvents(listener, ImageOnMap.getPlugin());
+		}
+		open = true;
+	}
 
-    /* ===== Getters & Setters ===== */
+	/* ===== Getters & Setters ===== */
 
-    /**
-     * Returns whether the GUI is currently open or not.
-     * @return If the GUI is currently open or not.
-     */
-    public final boolean isOpen() {
-        return open;
-    }
+	/**
+	 * Returns whether the GUI is currently open or not.
+	 * 
+	 * @return If the GUI is currently open or not.
+	 */
+	public final boolean isOpen() {
+		return open;
+	}
 
-    /**
-     * Gets the parent of this GUI.
-     * @return The parent of this GUI.
-     */
-    public final GuiBase getParent() {
-        return parent;
-    }
+	/**
+	 * Gets the parent of this GUI.
+	 * 
+	 * @return The parent of this GUI.
+	 */
+	public final GuiBase getParent() {
+		return parent;
+	}
 
-    void setParent(GuiBase parent) {
-        if (parent == this) {
-            throw new IllegalArgumentException("A GUI cannot be its own parent.");
-        }
-        this.parent = parent;
-    }
+	void setParent(GuiBase parent) {
+		if (parent == this) {
+			throw new IllegalArgumentException("A GUI cannot be its own parent.");
+		}
+		this.parent = parent;
+	}
 
-    /**
-     * Gets he player this Gui instance is associated to.
-     * @return The player this Gui instance is associated to.
-     */
-    protected final Player getPlayer() {
-        return player;
-    }
+	/**
+	 * Gets he player this Gui instance is associated to.
+	 * 
+	 * @return The player this Gui instance is associated to.
+	 */
+	protected final Player getPlayer() {
+		return player;
+	}
 
-    /**
-     * Gets the locale used by the player this Gui instance is associated to.
-     * @return The locale used by the player this Gui instance is associated to.
-     */
-    protected final Locale getPlayerLocale() {
-        return playerLocale;
-    }
+	/**
+	 * Gets the locale used by the player this Gui instance is associated to.
+	 * 
+	 * @return The locale used by the player this Gui instance is associated to.
+	 */
+	protected final Locale getPlayerLocale() {
+		return playerLocale;
+	}
 
 }

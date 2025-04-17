@@ -30,60 +30,54 @@
 
 package fr.moribus.imageonmap.commands;
 
-import fr.moribus.imageonmap.gui.GuiUtils;
-
 import org.bukkit.ChatColor;
 
+import fr.moribus.imageonmap.gui.GuiUtils;
 
 public class CommandException extends Exception {
-    private final Reason reason;
-    private final Command command;
-    private final String extra;
+	private final Reason reason;
+	private final Command command;
+	private final String extra;
 
-    /**
-     * A new CommandException.
-     * @param command The command that raised the exception.
-     * @param reason The reason code.
-     * @param extra Any extra message.
-     */
-    public CommandException(Command command, Reason reason, String extra) {
-        this.command = command;
-        this.reason = reason;
-        this.extra = extra;
-    }
+	/**
+	 * A new CommandException.
+	 * 
+	 * @param command The command that raised the exception.
+	 * @param reason  The reason code.
+	 * @param extra   Any extra message.
+	 */
+	public CommandException(Command command, Reason reason, String extra) {
+		this.command = command;
+		this.reason = reason;
+		this.extra = extra;
+	}
 
-    public CommandException(Command command, Reason reason) {
-        this(command, reason, "");
-    }
+	public CommandException(Command command, Reason reason) {
+		this(command, reason, "");
+	}
 
-    /**
-     * Builds the "reason" string for this command exception.
-     * @return The reason string.
-     */
-    public String getReasonString() {
-        return switch (reason) {
-            case COMMANDSENDER_EXPECTED_PLAYER ->  "You must be a player to use this command.";
-            case INVALID_PARAMETERS -> {
-                final String prefix = ChatColor.GOLD + Commands.CHAT_PREFIX + " " + ChatColor.RESET;
-                yield "\n"
-                        + ChatColor.RED + Commands.CHAT_PREFIX + ' ' + ChatColor.BOLD + "Invalid argument" + '\n'
-                        + GuiUtils.generatePrefixedFixedLengthString(ChatColor.RED + Commands.CHAT_PREFIX + " ", extra)
-                        + '\n'
-                        + GuiUtils.generatePrefixedFixedLengthString(prefix, "Usage: " + command.getUsageString())
-                        + '\n'
-                        + GuiUtils.generatePrefixedFixedLengthString(prefix,
-                        "For more information, use /" + command.getCommandGroup().getUsualName()
-                                + " help " + command.getName());
-            }
-            case COMMAND_ERROR -> extra.isEmpty() ? "An unknown error suddenly happened." : extra;
-            case SENDER_NOT_AUTHORIZED -> "You do not have the permission to use this command.";
-        };
-    }
+	/**
+	 * Builds the "reason" string for this command exception.
+	 * 
+	 * @return The reason string.
+	 */
+	public String getReasonString() {
+		return switch (reason) {
+		case COMMANDSENDER_EXPECTED_PLAYER -> "You must be a player to use this command.";
+		case INVALID_PARAMETERS -> {
+			final String prefix = ChatColor.GOLD + Commands.CHAT_PREFIX + " " + ChatColor.RESET;
+			yield "\n" + ChatColor.RED + Commands.CHAT_PREFIX + ' ' + ChatColor.BOLD + "Invalid argument" + '\n'
+					+ GuiUtils.generatePrefixedFixedLengthString(ChatColor.RED + Commands.CHAT_PREFIX + " ", extra)
+					+ '\n' + GuiUtils.generatePrefixedFixedLengthString(prefix, "Usage: " + command.getUsageString())
+					+ '\n' + GuiUtils.generatePrefixedFixedLengthString(prefix, "For more information, use /"
+							+ command.getCommandGroup().getUsualName() + " help " + command.getName());
+		}
+		case COMMAND_ERROR -> extra.isEmpty() ? "An unknown error suddenly happened." : extra;
+		case SENDER_NOT_AUTHORIZED -> "You do not have the permission to use this command.";
+		};
+	}
 
-    public enum Reason {
-        COMMANDSENDER_EXPECTED_PLAYER,
-        INVALID_PARAMETERS,
-        COMMAND_ERROR,
-        SENDER_NOT_AUTHORIZED
-    }
+	public enum Reason {
+		COMMANDSENDER_EXPECTED_PLAYER, INVALID_PARAMETERS, COMMAND_ERROR, SENDER_NOT_AUTHORIZED
+	}
 }

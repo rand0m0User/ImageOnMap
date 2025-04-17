@@ -31,31 +31,46 @@
 package fr.moribus.imageonmap.i18n;
 
 import java.util.Locale;
+
 import org.bukkit.entity.Player;
 
 /**
  * A shortcut to translate texts.
  *
- * <p>Use {@code I.t("text", ...)}, or statically import {@code I.t} and use {@code t("text", ...)} to
- * translate something.</p>
+ * <p>
+ * Use {@code I.t("text", ...)}, or statically import {@code I.t} and use
+ * {@code t("text", ...)} to translate something.
+ * </p>
  *
  *
  * <h3>The parameters</h3>
  *
- * <p>Translated string accept parameters in the following format: {@code {0}}, {@code {1}}, etc. These
- * tokens are replaced with the given parameters at runtime; the first parameter replaces the {@code
- * {0}} token, the second one, {@code {1}}, and so on.</p>
+ * <p>
+ * Translated string accept parameters in the following format: {@code {0}},
+ * {@code {1}}, etc. These tokens are replaced with the given parameters at
+ * runtime; the first parameter replaces the {@code {0}} token, the second one,
+ * {@code {1}}, and so on.
+ * </p>
  *
- * <p>Other parameters related options are available; see {@linkplain java.text.MessageFormat the
- * {@code MessageFormat} documentation} for more details.</p>
+ * <p>
+ * Other parameters related options are available; see
+ * {@linkplain java.text.MessageFormat the {@code MessageFormat} documentation}
+ * for more details.
+ * </p>
  *
- * <p>Note that the escaping behavior of the {@code '} character presented in the linked documentation
- * above <strong>does not apply</strong> to these translated texts, for convenience reasons.</p>
+ * <p>
+ * Note that the escaping behavior of the {@code '} character presented in the
+ * linked documentation above <strong>does not apply</strong> to these
+ * translated texts, for convenience reasons.
+ * </p>
  *
  *
  * <h3>Extracting strings from the source with {@code xgettext}</h3>
  *
- * <p>Give the following parameters to extract these strings to a {@code .po} file with {@code xgettext}:</p>
+ * <p>
+ * Give the following parameters to extract these strings to a {@code .po} file
+ * with {@code xgettext}:
+ * </p>
  *
  * <pre>
  *     # Lines: reset, with traditional imports and with static ones.
@@ -66,7 +81,9 @@ import org.bukkit.entity.Player;
  *         -k"sendTn:2,3" -k"sendTc:2c,3" -k"sendTcn:2c,3,4"
  * </pre>
  *
- * <p>Example:</p>
+ * <p>
+ * Example:
+ * </p>
  *
  * <pre>
  *     xgettext -c -k -k"I.t" -k"I.tn:1,2" -k"I.tc:1c,2" -k"I.tcn:1c,2,3" -k"I.tl:2" -k"I.tln:2,3" -k"I.tlc:2c,3" \
@@ -84,89 +101,95 @@ import org.bukkit.entity.Player;
  */
 @SuppressWarnings("checkstyle:LineLength")
 public class I {
-    /**
-     * Translates the string.
-     *
-     * @param text       The string to translate.
-     * @param parameters The parameters. See the class description for details.
-     * @return The translated string, with parameters incorporated.
-     */
-    public static String t(String text, Object... parameters) {
-        return I18n.translate(null, null, text, null, null, parameters);
-    }
+	/**
+	 * Translates the string.
+	 *
+	 * @param text       The string to translate.
+	 * @param parameters The parameters. See the class description for details.
+	 * @return The translated string, with parameters incorporated.
+	 */
+	public static String t(String text, Object... parameters) {
+		return I18n.translate(null, null, text, null, null, parameters);
+	}
 
-    /**
-     * Translates the string using the given locale.
-     *
-     * @param locale     The locale to use to translate the string.
-     * @param text       The string to translate.
-     * @param parameters The parameters. See the class description for details.
-     * @return The translated string, with parameters incorporated.
-     * @deprecated Use {@link #tl(Locale, String, Object...)} for the gettext
-     *     extractor to be able to read the strings.
-     */
-    @Deprecated
-    public static String t(Locale locale, String text, Object... parameters) {
-        return I18n.translate(locale, null, text, null, null, parameters);
-    }
+	/**
+	 * Translates the string using the given locale.
+	 *
+	 * @param locale     The locale to use to translate the string.
+	 * @param text       The string to translate.
+	 * @param parameters The parameters. See the class description for details.
+	 * @return The translated string, with parameters incorporated.
+	 * @deprecated Use {@link #tl(Locale, String, Object...)} for the gettext
+	 *             extractor to be able to read the strings.
+	 */
+	@Deprecated
+	public static String t(Locale locale, String text, Object... parameters) {
+		return I18n.translate(locale, null, text, null, null, parameters);
+	}
 
-    /**
-     * Translates the string with a plural.
-     *
-     * <p>The count is likely to be used in the string, so if only a count is given, this count is
-     * also interpreted as a parameter (the first and only one, {@code {0}}).</p>
-     *
-     * @param singular   The singular version of the string.
-     * @param plural     The plural version of the string.
-     * @param count      The items count, used to choose the plural form according to the language
-     *                   plural rules.
-     * @param parameters The parameters. See the class description for details.
-     * @return The translated string, with parameters incorporated, chosen according to the language
-     *     plural rules.
-     */
-    public static String tn(String singular, String plural, Integer count, Object... parameters) {
-        return I18n.translate(null, null, singular, plural, count, parameters);
-    }
+	/**
+	 * Translates the string with a plural.
+	 *
+	 * <p>
+	 * The count is likely to be used in the string, so if only a count is given,
+	 * this count is also interpreted as a parameter (the first and only one,
+	 * {@code {0}}).
+	 * </p>
+	 *
+	 * @param singular   The singular version of the string.
+	 * @param plural     The plural version of the string.
+	 * @param count      The items count, used to choose the plural form according
+	 *                   to the language plural rules.
+	 * @param parameters The parameters. See the class description for details.
+	 * @return The translated string, with parameters incorporated, chosen according
+	 *         to the language plural rules.
+	 */
+	public static String tn(String singular, String plural, Integer count, Object... parameters) {
+		return I18n.translate(null, null, singular, plural, count, parameters);
+	}
 
-    /**
-     * Translates the string with a plural using the given locale.
-     *
-     * <p>The count is likely to be used in the string, so if only a count is given, this count is
-     * also interpreted as a parameter (the first and only one, {@code {0}}).</p>
-     *
-     * @param locale     The locale to use to translate the string.
-     * @param singular   The singular version of the string.
-     * @param plural     The plural version of the string.
-     * @param count      The items count, used to choose the plural form according to the language
-     *                   plural rules.
-     * @param parameters The parameters. See the class description for details.
-     * @return The translated string, with parameters incorporated, chosen according to the language
-     *     plural rules.
-     */
-    public static String tn(Locale locale, String singular, String plural, Integer count, Object... parameters) {
-        return I18n.translate(locale, null, singular, plural, count, parameters);
-    }
+	/**
+	 * Translates the string with a plural using the given locale.
+	 *
+	 * <p>
+	 * The count is likely to be used in the string, so if only a count is given,
+	 * this count is also interpreted as a parameter (the first and only one,
+	 * {@code {0}}).
+	 * </p>
+	 *
+	 * @param locale     The locale to use to translate the string.
+	 * @param singular   The singular version of the string.
+	 * @param plural     The plural version of the string.
+	 * @param count      The items count, used to choose the plural form according
+	 *                   to the language plural rules.
+	 * @param parameters The parameters. See the class description for details.
+	 * @return The translated string, with parameters incorporated, chosen according
+	 *         to the language plural rules.
+	 */
+	public static String tn(Locale locale, String singular, String plural, Integer count, Object... parameters) {
+		return I18n.translate(locale, null, singular, plural, count, parameters);
+	}
 
-    /**
-     * Translates the string using the given locale.
-     *
-     * @param locale     The locale to use to translate the string.
-     * @param text       The string to translate.
-     * @param parameters The parameters. See the class description for details.
-     * @return The translated string, with parameters incorporated.
-     */
-    public static String tl(Locale locale, String text, Object... parameters) {
-        return I18n.translate(locale, null, text, null, null, parameters);
-    }
+	/**
+	 * Translates the string using the given locale.
+	 *
+	 * @param locale     The locale to use to translate the string.
+	 * @param text       The string to translate.
+	 * @param parameters The parameters. See the class description for details.
+	 * @return The translated string, with parameters incorporated.
+	 */
+	public static String tl(Locale locale, String text, Object... parameters) {
+		return I18n.translate(locale, null, text, null, null, parameters);
+	}
 
-    /**
-     * Translates the string and sends it to the given player.
-     *
-     * @param player     The player to send the message to.
-     * @param text       The string to translate.
-     * @param parameters The parameters. See the class description for details.
-     */
-    public static void sendT(Player player, String text, Object... parameters) {
-        player.sendMessage(I18n.translate(I18n.getPlayerLocale(player), null, text, null, null, parameters));
-    }
+	/**
+	 * Translates the string and sends it to the given player.
+	 *
+	 * @param player     The player to send the message to.
+	 * @param text       The string to translate.
+	 * @param parameters The parameters. See the class description for details.
+	 */
+	public static void sendT(Player player, String text, Object... parameters) {
+		player.sendMessage(I18n.translate(I18n.getPlayerLocale(player), null, text, null, null, parameters));
+	}
 }

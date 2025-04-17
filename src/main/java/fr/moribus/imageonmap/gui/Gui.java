@@ -30,82 +30,84 @@
 
 package fr.moribus.imageonmap.gui;
 
-import fr.zcraft.quartzlib.tools.runners.RunTask;
 import java.util.HashMap;
+
 import org.bukkit.entity.Player;
 
+import fr.zcraft.quartzlib.tools.runners.RunTask;
+
 public final class Gui {
-    /**
-     * A map of all the currently open GUIs, associated to the HumanEntity
-     * that requested it.
-     */
-    private static final HashMap<Player, GuiBase> openGuis = new HashMap<>();
+	/**
+	 * A map of all the currently open GUIs, associated to the HumanEntity that
+	 * requested it.
+	 */
+	private static final HashMap<Player, GuiBase> openGuis = new HashMap<>();
 
-    /**
-     * Opens a GUI for a player.
-     *
-     * @param <T>    A GUI type.
-     * @param owner  The player the GUI will be shown to.
-     * @param gui    The GUI.
-     * @param parent The parent of the newly created GUI. Can be null.
-     * @return The opened GUI.
-     */
-    public static <T extends GuiBase> T open(final Player owner, final T gui, final GuiBase parent) {
-        GuiBase openGui = openGuis.get(owner);
-        if (openGui != null) {
-            openGui.registerClose();
-        }
-        if (parent != null) {
-            gui.setParent(parent);
-        }
+	/**
+	 * Opens a GUI for a player.
+	 *
+	 * @param <T>    A GUI type.
+	 * @param owner  The player the GUI will be shown to.
+	 * @param gui    The GUI.
+	 * @param parent The parent of the newly created GUI. Can be null.
+	 * @return The opened GUI.
+	 */
+	public static <T extends GuiBase> T open(final Player owner, final T gui, final GuiBase parent) {
+		GuiBase openGui = openGuis.get(owner);
+		if (openGui != null) {
+			openGui.registerClose();
+		}
+		if (parent != null) {
+			gui.setParent(parent);
+		}
 
-        RunTask.later(() -> gui.open(owner), 0);
-        return gui;
-    }
+		RunTask.later(() -> gui.open(owner), 0);
+		return gui;
+	}
 
-    /**
-     * Opens a GUI for a player.
-     *
-     * @param <T>   A GUI type.
-     * @param owner The player the GUI will be shown to.
-     * @param gui   The GUI.
-     * @return The opened GUI.
-     */
-    public static <T extends GuiBase> T open(Player owner, T gui) {
-        return open(owner, gui, null);
-    }
+	/**
+	 * Opens a GUI for a player.
+	 *
+	 * @param <T>   A GUI type.
+	 * @param owner The player the GUI will be shown to.
+	 * @param gui   The GUI.
+	 * @return The opened GUI.
+	 */
+	public static <T extends GuiBase> T open(Player owner, T gui) {
+		return open(owner, gui, null);
+	}
 
-    /**
-     * Updates any GUI of this type (or subclass of it).
-     *
-     * @param guiClass The GUI class.
-     */
-    public static void update(Class<? extends GuiBase> guiClass) {
-        for (GuiBase openGui : openGuis.values()) {
-            if (guiClass.isAssignableFrom(openGui.getClass())) {
-                openGui.update();
-            }
-        }
-    }
+	/**
+	 * Updates any GUI of this type (or subclass of it).
+	 *
+	 * @param guiClass The GUI class.
+	 */
+	public static void update(Class<? extends GuiBase> guiClass) {
+		for (GuiBase openGui : openGuis.values()) {
+			if (guiClass.isAssignableFrom(openGui.getClass())) {
+				openGui.update();
+			}
+		}
+	}
 
-    /**
-     * Registers a GUI as open for the given player.
-     */
-    static void registerGuiOpen(Player player, GuiBase gui) {
-        openGuis.put(player, gui);
-    }
+	/**
+	 * Registers a GUI as open for the given player.
+	 */
+	static void registerGuiOpen(Player player, GuiBase gui) {
+		openGuis.put(player, gui);
+	}
 
-    /**
-     * Registers a GUI as closed for the given player.
-     */
-    static void registerGuiClose(GuiBase gui) {
-        openGuis.remove(gui.getPlayer());
-    }
+	/**
+	 * Registers a GUI as closed for the given player.
+	 */
+	static void registerGuiClose(GuiBase gui) {
+		openGuis.remove(gui.getPlayer());
+	}
 
-    /**
-     * Clears opened GUIs. Invoked on plugin enabled and disabled.
-     */
-    public static void clearOpenGuis() {
-        openGuis.clear();
-    }
+	/**
+	 * Clears opened GUIs. Invoked on plugin enabled and disabled.
+	 */
+	public static void clearOpenGuis() {
+		openGuis.clear();
+	}
 }

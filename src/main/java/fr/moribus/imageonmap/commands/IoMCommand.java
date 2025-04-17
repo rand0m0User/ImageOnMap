@@ -36,89 +36,89 @@
 
 package fr.moribus.imageonmap.commands;
 
-import fr.moribus.imageonmap.map.ImageMap;
-import fr.moribus.imageonmap.map.MapManager;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
+
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
+import fr.moribus.imageonmap.map.ImageMap;
+import fr.moribus.imageonmap.map.MapManager;
+
 public abstract class IoMCommand extends Command {
 
+	protected void retrieveUUID(String arg, Consumer<UUID> consumer) {
+		consumer.accept(Bukkit.getOfflinePlayer(arg).getUniqueId());
+	}
 
-    protected void retrieveUUID(String arg, Consumer<UUID> consumer) {
-        consumer.accept(Bukkit.getOfflinePlayer(arg).getUniqueId());
-    }
+	protected ArrayList<String> getArgs() {
+		ArrayList<String> arguments = new ArrayList<>();
 
-    protected ArrayList<String> getArgs() {
-        ArrayList<String> arguments = new ArrayList<>();
+		// State of the automaton, can read word like:
+		// name_here; "name here"
+		int state = 0;
+		StringBuilder s = new StringBuilder();
 
-        //State of the automaton, can read word like:
-        //name_here; "name here"
-        int state = 0;
-        StringBuilder s = new StringBuilder();
+		for (String arg : args) {
+			if (arg.startsWith("http:") || arg.startsWith("https:")) {
+				arguments.add(arg);
+				continue;
+			}
+			if (state == 0) {
+				s = new StringBuilder();
+			} else {
+				s.append(" ");
+			}
+			for (char c : arg.toCharArray()) {
+				switch (state) {
+				case 0 -> {
+					if (c == '\"') {
+						state = 1;
+					} else {
+						// If we read a : that means that we are on a new argument example:"hello"
+						if (c == ':') {
+							arguments.add(s.toString());
+							s = new StringBuilder();
+						} else {
+							s.append(c);
+						}
+					}
+				}
+				case 1 -> {
+					if (c == '\"') {
+						arguments.add(s.toString());
+						s = new StringBuilder();
+						state = 0;
+					} else {
+						s.append(c);
+					}
+				}
+				default -> throw new IllegalStateException("Unexpected value: " + state);
+				}
+			}
 
-        for (String arg : args) {
-            if (arg.startsWith("http:") || arg.startsWith("https:")) {
-                arguments.add(arg);
-                continue;
-            }
-            if (state == 0) {
-                s = new StringBuilder();
-            } else {
-                s.append(" ");
-            }
-            for (char c : arg.toCharArray()) {
-                switch (state) {
-                    case 0 -> {
-                        if (c == '\"') {
-                            state = 1;
-                        } else {
-                            //If we read a : that means that we are on a new argument example:"hello"
-                            if (c == ':') {
-                                arguments.add(s.toString());
-                                s = new StringBuilder();
-                            } else {
-                                s.append(c);
-                            }
-                        }
-                    }
-                    case 1 -> {
-                        if (c == '\"') {
-                            arguments.add(s.toString());
-                            s = new StringBuilder();
-                            state = 0;
-                        } else {
-                            s.append(c);
-                        }
-                    }
-                    default -> throw new IllegalStateException("Unexpected value: " + state);
-                }
-            }
+			if (s.length() > 0 && state != 1) {
+				arguments.add(s.toString());
+			}
+		}
+		return arguments;
+	}
 
-            if (s.length() > 0 && state != 1) {
-                arguments.add(s.toString());
-            }
-        }
-        return arguments;
-    }
+	protected List<String> getMatchingMapNames(Player player, String prefix) {
+		return getMatchingMapNames(MapManager.getMapList(player.getUniqueId()), prefix);
+	}
 
-    protected List<String> getMatchingMapNames(Player player, String prefix) {
-        return getMatchingMapNames(MapManager.getMapList(player.getUniqueId()), prefix);
-    }
+	protected List<String> getMatchingMapNames(Iterable<? extends ImageMap> maps, String prefix) {
+		List<String> matches = new ArrayList<>();
 
-    protected List<String> getMatchingMapNames(Iterable<? extends ImageMap> maps, String prefix) {
-        List<String> matches = new ArrayList<>();
+		for (ImageMap map : maps) {
+			if (map.getId().startsWith(prefix)) {
+				matches.add(map.getId());
+			}
+		}
 
-        for (ImageMap map : maps) {
-            if (map.getId().startsWith(prefix)) {
-                matches.add(map.getId());
-            }
-        }
-
-        return matches;
-    }
+		return matches;
+	}
 }

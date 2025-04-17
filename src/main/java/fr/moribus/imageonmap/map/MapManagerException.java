@@ -42,23 +42,23 @@ import fr.moribus.imageonmap.i18n.I;
 
 public class MapManagerException extends Exception {
 
-    public MapManagerException(Reason reason, Object... arguments) {
-        super(reason.getReasonString(arguments));
-    }
-    
-    public enum Reason {
-        MAXIMUM_PLAYER_MAPS_EXCEEDED(I.t("You have too many maps (maximum : {0}).")),
-        MAXIMUM_SERVER_MAPS_EXCEEDED(I.t("The server ImageOnMap limit has been reached.")),
-        IMAGEMAP_DOES_NOT_EXIST(I.t("The given map does not exist."));
+	public MapManagerException(Reason reason, Object... arguments) {
+		super(reason.getReasonString(arguments));
+	}
 
-        private final String reasonString;
+	public enum Reason {
+		MAXIMUM_PLAYER_MAPS_EXCEEDED(I.t("You have too many maps (maximum : {0}).")),
+		MAXIMUM_SERVER_MAPS_EXCEEDED(I.t("The server ImageOnMap limit has been reached.")),
+		IMAGEMAP_DOES_NOT_EXIST(I.t("The given map does not exist."));
 
-        Reason(String reasonString) {
-            this.reasonString = reasonString;
-        }
+		private final String reasonString;
 
-        public String getReasonString(Object... arguments) {
-            return MessageFormat.format(reasonString, arguments);
-        }
-    }
+		Reason(String reasonString) {
+			this.reasonString = reasonString;
+		}
+
+		public String getReasonString(Object... arguments) {
+			return MessageFormat.format(reasonString, arguments);
+		}
+	}
 }

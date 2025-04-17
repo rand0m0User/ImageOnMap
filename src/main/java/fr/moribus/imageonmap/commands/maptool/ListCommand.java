@@ -36,6 +36,12 @@
 
 package fr.moribus.imageonmap.commands.maptool;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
+
 import fr.moribus.imageonmap.Permissions;
 import fr.moribus.imageonmap.commands.CommandException;
 import fr.moribus.imageonmap.commands.CommandInfo;
@@ -51,80 +57,67 @@ import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
-import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @CommandInfo(name = "list", usageParameters = "[player name]")
 public class ListCommand extends IoMCommand {
-    @Override
-    protected void run() throws CommandException {
-        ArrayList<String> arguments = getArgs();
-        if (arguments.size() > 1) {
-            throwInvalidArgument(I.t("Too many parameters!"));
-            return;
-        }
+	@Override
+	protected void run() throws CommandException {
+		ArrayList<String> arguments = getArgs();
+		if (arguments.size() > 1) {
+			throwInvalidArgument(I.t("Too many parameters!"));
+			return;
+		}
 
-        String playerName;
-        if (arguments.size() == 1) {
-            if (!Permissions.LISTOTHER.grantedTo(sender)) {
-                throwNotAuthorized();
-                return;
-            }
+		String playerName;
+		if (arguments.size() == 1) {
+			if (!Permissions.LISTOTHER.grantedTo(sender)) {
+				throwNotAuthorized();
+				return;
+			}
 
-            playerName = arguments.get(0);
-        } else {
-            playerName = playerSender().getName();
-        }
+			playerName = arguments.get(0);
+		} else {
+			playerName = playerSender().getName();
+		}
 
-        final Player sender = playerSender();
+		final Player sender = playerSender();
 
+		retrieveUUID(playerName, uuid -> {
+			List<ImageMap> mapList = MapManager.getMapList(uuid);
+			if (mapList.isEmpty()) {
+				info(sender, I.t("No map found."));
+				return;
+			}
 
-        retrieveUUID(playerName, uuid -> {
-            List<ImageMap> mapList = MapManager.getMapList(uuid);
-            if (mapList.isEmpty()) {
-                info(sender, I.t("No map found."));
-                return;
-            }
+			info(sender, I.tn("{white}{bold}{0} map found.", "{white}{bold}{0} maps found.", mapList.size()));
 
-            info(sender, I.tn("{white}{bold}{0} map found.", "{white}{bold}{0} maps found.", mapList.size()));
+			TextComponent.Builder rawText = addMap(Component.text(), mapList.get(0));
 
-            TextComponent.Builder rawText = addMap(Component.text(), mapList.get(0));
+			// TODO pagination chat
+			for (int i = 1, c = mapList.size(); i < c; i++) {
+				rawText.append(Component.text(", ")).color(NamedTextColor.GRAY);
+				addMap(rawText, mapList.get(i));
+			}
+			sender.sendMessage(rawText.build());
+		});
+	}
 
-            //TODO pagination chat
-            for (int i = 1, c = mapList.size(); i < c; i++) {
-                rawText.append(Component.text(", ")).color(NamedTextColor.GRAY);
-                addMap(rawText, mapList.get(i));
-            }
-            sender.sendMessage(rawText.build());
-        });
-    }
+	private TextComponent.Builder addMap(TextComponent.Builder rawText, ImageMap map) {
+		final String size = map.getType() == ImageMap.Type.SINGLE ? "1 × 1"
+				: ((PosterMap) map).getColumnCount() + " × " + ((PosterMap) map).getRowCount();
 
-    private TextComponent.Builder addMap(TextComponent.Builder rawText, ImageMap map) {
-        final String size = map.getType() == ImageMap.Type.SINGLE ? "1 × 1" :
-                ((PosterMap) map).getColumnCount() + " × " + ((PosterMap) map).getRowCount();
+		return rawText.append(Component.text().content(map.getId()).color(NamedTextColor.WHITE)
+				.clickEvent(ClickEvent.runCommand(Commands.getCommandInfo(GetCommand.class).build(map.getId())))
+				.hoverEvent(HoverEvent.showText(Component.text()
+						.append(Component.text(map.getName(), NamedTextColor.GREEN, TextDecoration.BOLD))
+						.append(Component.newline())
+						.append(Component.text(map.getId() + ", " + size, NamedTextColor.GRAY))
+						.append(Component.newline()).append(Component.newline())
+						.append(Component.text(I.t("{white}Click{gray} to get this map"))).build())));
+	}
 
-        return rawText.append(
-                Component.text()
-                        .content(map.getId())
-                        .color(NamedTextColor.WHITE)
-                        .clickEvent(ClickEvent.runCommand(Commands.getCommandInfo(GetCommand.class).build(map.getId())))
-                        .hoverEvent(HoverEvent.showText(Component.text()
-                                .append(Component.text(map.getName(), NamedTextColor.GREEN, TextDecoration.BOLD))
-                                .append(Component.newline())
-                                .append(Component.text(map.getId() + ", " + size, NamedTextColor.GRAY))
-                                .append(Component.newline())
-                                .append(Component.newline())
-                                .append(Component.text(I.t("{white}Click{gray} to get this map")))
-                                .build()
-                        ))
-        );
-    }
-
-    @Override
-    public boolean canExecute(CommandSender sender) {
-        return Permissions.LIST.grantedTo(sender);
-    }
+	@Override
+	public boolean canExecute(CommandSender sender) {
+		return Permissions.LIST.grantedTo(sender);
+	}
 }

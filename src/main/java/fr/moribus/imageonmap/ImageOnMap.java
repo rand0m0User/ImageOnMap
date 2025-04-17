@@ -36,7 +36,27 @@
 
 package fr.moribus.imageonmap;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.UUID;
+import java.util.jar.JarFile;
+import java.util.logging.Level;
 
+import org.bukkit.Bukkit;
+import org.bukkit.command.CommandExecutor;
+import org.bukkit.command.PluginCommand;
+import org.bukkit.command.TabCompleter;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Player;
+import org.bukkit.plugin.java.JavaPlugin;
+import fr.moribus.imageonmap.commands.bukkit.*;
 import fr.moribus.imageonmap.commands.Commands;
 import fr.moribus.imageonmap.commands.maptool.DeleteCommand;
 import fr.moribus.imageonmap.commands.maptool.ExploreCommand;
@@ -53,124 +73,180 @@ import fr.moribus.imageonmap.image.MapInitEvent;
 import fr.moribus.imageonmap.map.MapManager;
 import fr.moribus.imageonmap.ui.MapItemManager;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.jar.JarFile;
-import java.util.logging.Level;
-
-import org.bukkit.plugin.java.JavaPlugin;
-
 public final class ImageOnMap extends JavaPlugin {
 
-    private static ImageOnMap PLUGIN;
+	private static ImageOnMap PLUGIN;
 
-    private final Path mapsDirectory;
-    private final Path imagesDirectory;
+	private FileConfiguration BannedHashesyml;
+	private File BannedHashesFile;
+	public List<String> BannedHashes;
+	private final Path mapsDirectory;
+	private final Path imagesDirectory;
 
-    public ImageOnMap() {
-        PLUGIN = this;
+	public ImageOnMap() {
+		PLUGIN = this;
 
-        var folder = getDataFolder().toPath();
-        mapsDirectory = folder.resolve("maps");
-        imagesDirectory = folder.resolve("images");
-    }
+		var folder = getDataFolder().toPath();
+		mapsDirectory = folder.resolve("maps");
+		imagesDirectory = folder.resolve("images");
+	}
 
-    public static ImageOnMap getPlugin() {
-        return PLUGIN;
-    }
+	public static ImageOnMap getPlugin() {
+		return PLUGIN;
+	}
 
-    public Path getImagesDirectory() {
-        return imagesDirectory;
-    }
+	public Path getImagesDirectory() {
+		return imagesDirectory;
+	}
 
-    public Path getMapsDirectory() {
-        return mapsDirectory;
-    }
+	public Path getMapsDirectory() {
+		return mapsDirectory;
+	}
 
-    public Path getImageFile(int mapID) {
-        return imagesDirectory.resolve("map" + mapID + ".png");
-    }
+	public Path getImageFile(int mapID) {
+		return imagesDirectory.resolve("map" + mapID + ".png");
+	}
 
-    @SuppressWarnings("unchecked")
-    @Override
-    public void onEnable() {
-        // Creating the images and maps directories if necessary
-        try {
-            checkPluginDirectory(mapsDirectory);
-            checkPluginDirectory(imagesDirectory);
-        } catch (final IOException ex) {
-            getLogger().log(Level.SEVERE, "FATAL: " + ex.getMessage());
-            getServer().getPluginManager().disablePlugin(this);
-            return;
-        }
+	@SuppressWarnings("unchecked")
+	@Override
+	public void onEnable() {
+		// Creating the images and maps directories if necessary
+		try {
+			checkPluginDirectory(mapsDirectory);
+			checkPluginDirectory(imagesDirectory);
+		} catch (final IOException ex) {
+			getLogger().log(Level.SEVERE, "FATAL: " + ex.getMessage());
+			getServer().getPluginManager().disablePlugin(this);
+			return;
+		}
 
-        saveDefaultConfig();
-        Gui.clearOpenGuis();
+		saveDefaultConfig();
+		Gui.clearOpenGuis();
 
-        JarFile jarFile = getJarFile();
+		JarFile jarFile = getJarFile();
 
-        try {
-            I18n.onEnable(jarFile);
-        } finally {
-            if (jarFile != null) {
-                try {
-                    jarFile.close();
-                } catch (IOException e) {
-                    ImageOnMap.getPlugin().getLogger().log(Level.SEVERE, "Unable to close JAR file " + getFile().getAbsolutePath(), e);
-                }
-            }
-        }
+		try {
+			I18n.onEnable(jarFile);
+		} finally {
+			if (jarFile != null) {
+				try {
+					jarFile.close();
+				} catch (IOException e) {
+					ImageOnMap.getPlugin().getLogger().log(Level.SEVERE,
+							"Unable to close JAR file " + getFile().getAbsolutePath(), e);
+				}
+			}
+		}
 
-        //Init all the things !
-        I18n.setPrimaryLocale(PluginConfiguration.LANG.get());
+		// ####################################
+		// file loader: hashes
 
-        MapManager.init();
-        MapInitEvent.init();
-        MapItemManager.init();
+		// Create the data file and load the data configuration
+		BannedHashesFile = new File(getDataFolder(), "BannedImageHashes.yml");
+		if (!BannedHashesFile.exists()) {
+			saveResource("BannedImageHashes.yml", false);
+		}
+		BannedHashesyml = YamlConfiguration.loadConfiguration(BannedHashesFile);
 
+		// Load the string list from the data configuration
+		BannedHashes = BannedHashesyml.getStringList("BannedHashes");
 
-        Commands.register(
-                "maptool",
-                NewCommand.class,
-                ListCommand.class,
-                GetCommand.class,
-                RenameCommand.class,
-                DeleteCommand.class,
-                GiveCommand.class,
-                GetRemainingCommand.class,
-                ExploreCommand.class,
-                UpdateCommand.class
-        );
+		// ####################################
 
-        Commands.registerShortcut("maptool", NewCommand.class, "tomap");
-        Commands.registerShortcut("maptool", ExploreCommand.class, "maps");
-        Commands.registerShortcut("maptool", GiveCommand.class, "givemap");
-    }
+		PluginConfiguration.BANNED_PDQ_MESSAGE.get();
 
-    @Override
-    public void onDisable() {
-        MapManager.exit();
-        MapItemManager.exit();
+		// Init all the things !
+		I18n.setPrimaryLocale(PluginConfiguration.LANG.get());
 
-        Gui.clearOpenGuis();
-    }
+		MapManager.init();
+		MapInitEvent.init();
+		MapItemManager.init();
 
-    private void checkPluginDirectory(Path directory) throws IOException {
-        if (!Files.isDirectory(directory)) {
-            Files.createDirectories(directory);
-        }
-    }
+		Commands.register("maptool", NewCommand.class, ListCommand.class, GetCommand.class, RenameCommand.class,
+				DeleteCommand.class, GiveCommand.class, GetRemainingCommand.class, ExploreCommand.class,
+				UpdateCommand.class);
 
-    /**
-     * Gets the .jar file this plugin is loaded by, or null if it wasn't found.
-     */
-    public JarFile getJarFile() {
-        try {
-            return new JarFile(getFile());
-        } catch (IOException e) {
-            ImageOnMap.getPlugin().getLogger().log(Level.SEVERE, "Unable to load JAR file " + getFile().getAbsolutePath(), e);
-            return null;
-        }
-    }
+		Commands.registerShortcut("maptool", NewCommand.class, "tomap");
+		Commands.registerShortcut("maptool", ExploreCommand.class, "maps");
+		Commands.registerShortcut("maptool", GiveCommand.class, "givemap");
+
+		initCommand("banhash", new BanHashCommand(), null);
+		initCommand("unbanhash", new UnbanHashCommand(), null);
+
+	}
+
+	@Override
+	public void onDisable() {
+		MapManager.exit();
+		MapItemManager.exit();
+
+		// ####################################
+		// file loader: hashes
+
+		// Save the string list to the data configuration
+		BannedHashesyml.set("BannedHashes", BannedHashes);
+
+		// Save the data configuration to the data file
+		try {
+			BannedHashesyml.save(BannedHashesFile);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		// ####################################
+
+		Gui.clearOpenGuis();
+	}
+
+	private void checkPluginDirectory(Path directory) throws IOException {
+		if (!Files.isDirectory(directory)) {
+			Files.createDirectories(directory);
+		}
+	}
+
+	/**
+	 * Gets the .jar file this plugin is loaded by, or null if it wasn't found.
+	 */
+	public JarFile getJarFile() {
+		try {
+			return new JarFile(getFile());
+		} catch (IOException e) {
+			ImageOnMap.getPlugin().getLogger().log(Level.SEVERE,
+					"Unable to load JAR file " + getFile().getAbsolutePath(), e);
+			return null;
+		}
+	}
+
+	public static void DoFancyBan(UUID playerUUID) {
+		Player p = Bukkit.getServer().getPlayer(playerUUID);
+		String ip = "<offline>"; // default value
+		if (p != null) {
+			ip = p.getAddress().getAddress().toString().replace("/", "");
+		}
+		String msg = PluginConfiguration.BANNED_PDQ_MESSAGE.get();
+		msg = msg.replace("\\n", "\n");
+		msg = msg.replace("%TIME%", formatTime(LocalDateTime.now()));
+		msg = msg.replace("%IP%", ip);
+		msg = msg.replace("%NAME%", p.getName());
+
+		// re sync to main server thread
+		final String message = msg;
+		Bukkit.getScheduler().runTask(PLUGIN, () -> {
+			p.ban(message, (Duration) null, null);
+			p.banPlayerIP(message, false);
+		});
+
+	}
+
+	private static String formatTime(LocalDateTime t) {
+		return t.format(DateTimeFormatter.ofPattern("MMM dd,, yyyy")).replace(",,", "th").replace(" 0", " ")
+				.replace("1th", "1st").replace("2th", "2nd").replace("3th", "3rd");
+	}
+
+	private void initCommand(String cmd, CommandExecutor Executor, TabCompleter Completer) {
+		PluginCommand c = getCommand(cmd);
+		if (c != null) {
+			c.setExecutor(Executor);
+			c.setTabCompleter(Completer);
+		}
+	}
 }

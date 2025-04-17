@@ -54,50 +54,51 @@
 
 package fr.moribus.imageonmap.commands.maptool;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.bukkit.command.CommandSender;
+
 import fr.moribus.imageonmap.Permissions;
+import fr.moribus.imageonmap.commands.CommandException;
+import fr.moribus.imageonmap.commands.CommandInfo;
 import fr.moribus.imageonmap.commands.IoMCommand;
 import fr.moribus.imageonmap.i18n.I;
 import fr.moribus.imageonmap.map.ImageMap;
 import fr.moribus.imageonmap.map.MapManager;
-import fr.moribus.imageonmap.commands.CommandException;
-import fr.moribus.imageonmap.commands.CommandInfo;
-
-import java.util.ArrayList;
-import java.util.List;
-import org.bukkit.command.CommandSender;
 
 @CommandInfo(name = "rename", usageParameters = "<original map name> <new map name>")
 public class RenameCommand extends IoMCommand {
 
-    @Override
-    protected void run() throws CommandException {
+	@Override
+	protected void run() throws CommandException {
 
-        ArrayList<String> argList = getArgs();
+		ArrayList<String> argList = getArgs();
 
-        if (argList.size() != 2) {
-            warning(I.t("Not enough or too many arguments! Usage: /maptool rename <map name> <new map name>"));
-            return;
-        }
+		if (argList.size() != 2) {
+			warning(I.t("Not enough or too many arguments! Usage: /maptool rename <map name> <new map name>"));
+			return;
+		}
 
-        ImageMap map = MapManager.getMap(playerSender().getUniqueId(), argList.get(0));
-        if (map == null) {
-            error(I.t("This map does not exist."));
-            return;
-        }
-        map.rename(argList.get(1));
-    }
+		ImageMap map = MapManager.getMap(playerSender().getUniqueId(), argList.get(0));
+		if (map == null) {
+			error(I.t("This map does not exist."));
+			return;
+		}
+		map.rename(argList.get(1));
+	}
 
-    @Override
-    protected List<String> complete() throws CommandException {
+	@Override
+	protected List<String> complete() throws CommandException {
 
-        if (args.length == 1) {
-            return getMatchingMapNames(playerSender(), args[0]);
-        }
-        return null;
-    }
+		if (args.length == 1) {
+			return getMatchingMapNames(playerSender(), args[0]);
+		}
+		return null;
+	}
 
-    @Override
-    public boolean canExecute(CommandSender sender) {
-        return Permissions.RENAME.grantedTo(sender);
-    }
+	@Override
+	public boolean canExecute(CommandSender sender) {
+		return Permissions.RENAME.grantedTo(sender);
+	}
 }

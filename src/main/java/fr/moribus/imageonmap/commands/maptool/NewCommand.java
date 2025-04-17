@@ -36,96 +36,124 @@
 
 package fr.moribus.imageonmap.commands.maptool;
 
+import java.net.MalformedURLException;
+import java.net.URL;
+
+import org.bukkit.ChatColor;
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
+
 import fr.moribus.imageonmap.ImageOnMap;
 import fr.moribus.imageonmap.Permissions;
+import fr.moribus.imageonmap.commands.CommandException;
+import fr.moribus.imageonmap.commands.CommandInfo;
 import fr.moribus.imageonmap.commands.IoMCommand;
 import fr.moribus.imageonmap.i18n.I;
 import fr.moribus.imageonmap.image.ImageRendererExecutor;
 import fr.moribus.imageonmap.image.ImageUtils;
 import fr.moribus.imageonmap.map.PosterMap;
-import fr.moribus.imageonmap.commands.CommandException;
-import fr.moribus.imageonmap.commands.CommandInfo;
 import fr.zcraft.quartzlib.tools.text.ActionBar;
-import java.net.MalformedURLException;
-import java.net.URL;
-
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import org.bukkit.ChatColor;
-import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
 
 @CommandInfo(name = "new", usageParameters = "<URL> [resize]")
 public class NewCommand extends IoMCommand {
 
-    private ImageUtils.ScalingType resizeMode() throws CommandException {
-        return switch (args[1]) {
-            case "resize" -> ImageUtils.ScalingType.CONTAINED;
-            case "stretch", "stretched", "resize-stretched" -> ImageUtils.ScalingType.STRETCHED;
-            case "cover", "covered", "resize-covered" -> ImageUtils.ScalingType.COVERED;
-            default -> {
-                throwInvalidArgument(I.t("Invalid Stretching mode."));
-                yield  ImageUtils.ScalingType.NONE;
-            }
-        };
-    }
+	private ImageUtils.ScalingType resizeMode() throws CommandException {
+		return switch (args[1]) {
+		case "resize" -> ImageUtils.ScalingType.CONTAINED;
+		case "stretch", "stretched", "resize-stretched" -> ImageUtils.ScalingType.STRETCHED;
+		case "cover", "covered", "resize-covered" -> ImageUtils.ScalingType.COVERED;
+		default -> {
+			throwInvalidArgument(I.t("Invalid Stretching mode."));
+			yield ImageUtils.ScalingType.NONE;
+		}
+		};
+	}
 
-    @Override
-    protected void run() throws CommandException {
-        final Player player = playerSender();
-        ImageUtils.ScalingType scaling = ImageUtils.ScalingType.NONE;
-        URL url;
-        int width = 0;
-        int height = 0;
+	@Override
+	protected void run() throws CommandException {
+		final Player player = playerSender();
+		ImageUtils.ScalingType scaling = ImageUtils.ScalingType.NONE;
+		URL url;
+		int width = 0;
+		int height = 0;
 
-        if (args.length < 1) {
-            throwInvalidArgument(I.t("You must give an URL to take the image from."));
-        }
+		if (args.length < 1) {
+			throwInvalidArgument(I.t("You must give an URL to take the image from."));
+		}
 
-        try {
-            url = new URL(args[0]);
-        } catch (MalformedURLException ex) {
-            throwInvalidArgument(I.t("Invalid URL."));
-            return;
-        }
+		try {
+			url = new URL(args[0]);
+		} catch (MalformedURLException ex) {
+			throwInvalidArgument(I.t("Invalid URL."));
+			return;
+		}
 
-        if (args.length >= 2) {
-            if (args.length >= 4) {
-                width = Integer.parseInt(args[2]);
-                height = Integer.parseInt(args[3]);
-            }
-            scaling = resizeMode();
-        }
-        try {
-            ActionBar.sendPermanentMessage(player, ChatColor.DARK_GREEN + I.t("Rendering..."));
-            ImageRendererExecutor.render(url, scaling, player.getUniqueId(), width, height)
-                    .exceptionallyAsync((exception) -> {
-                        player.sendMessage(I.t("{ce}Map rendering failed: {0}", exception.getMessage()));
-                        ImageOnMap.getPlugin().getLogger().warning("Rendering from " + player.getName() + " failed: "
-                                + exception.getClass().getCanonicalName() + ": " + exception.getMessage());
-                        return null;
-                    })
-                    .thenAccept(result -> {
-                        ActionBar.removeMessage(player);
-                        player.sendActionBar(Component.text()
-                                .color(NamedTextColor.DARK_GREEN)
-                                .append(Component.text(I.t("Rendering finished!")))
-                                .build()
-                        );
+		// blacklist pedochan
+		// if (args[0].startsWith("https://catchan") ||
+		// args[0].startsWith("http://catchan")) {
+		// player.banPlayerFull("[imageonmapmap automod] CP spammers lost!");
+		// return;
+		// }
 
-                        if (result.give(player)
-                                && (result instanceof PosterMap && !((PosterMap) result).hasColumnData())) {
-                            info(I.t("The rendered map was too big to fit in your inventory."));
-                            info(I.t("Use '/maptool getremaining' to get the remaining maps."));
-                        }
-                    });
-        } finally {
-            ActionBar.removeMessage(player);
-        }
-    }
+//		String[] whitelist = new String[] { "https://soyak.party/", "https://soyjak.party/", "https://wiki.soyjak.party/", "https://booru.soy/",
+//				"https://i.4cdn.org/" };
+//
+//		String[] blacklist = new String[] { "https://soyjak.party/int/", "https://soyjak.party/nate/", 
+//		"https://soyak.party/int/", "https://soyak.party/nate/", "https://i.4cdn.org/b/" };
+//
+//		// only allow images to be pulled from decently moderated places as to curbstomp
+//		// 90% of 'p posters
+//		boolean c = false;
+//		for (String w : whitelist) {
+//			c = c || args[0].startsWith(w);
+//		}
+//		//if the check is still false, throw the error
+//		if (!c) {
+//			throwInvalidArgument(I.t("Non whitelisted URL! Trusted imagehosts are as follows: " + String.join(", ", whitelist)));
+//			return;
+//		}
+//		for (String b : blacklist) {
+//			if (args[0].startsWith(b)) {
+//				throwInvalidArgument(I.t("Blacklisted URL! (lack of moderation)"));
+//				return;
+//			}
+//		}
 
-    @Override
-    public boolean canExecute(CommandSender sender) {
-        return Permissions.NEW.grantedTo(sender);
-    }
+		if (args.length >= 2) {
+			if (args.length >= 4) {
+				width = Integer.parseInt(args[2]);
+				height = Integer.parseInt(args[3]);
+			}
+			scaling = resizeMode();
+		}
+		try {
+			ActionBar.sendPermanentMessage(player, ChatColor.DARK_GREEN + I.t("Rendering..."));
+			ImageRendererExecutor.render(url, scaling, player.getUniqueId(), width, height)
+					.exceptionallyAsync((exception) -> {
+						player.sendMessage(I.t("{ce}Map rendering failed: {0}", exception.getMessage()));
+						ImageOnMap.getPlugin().getLogger().warning("Rendering from " + player.getName() + " failed: "
+								+ exception.getClass().getCanonicalName() + ": " + exception.getMessage());
+						return null;
+					}).thenAccept(result -> {
+						ActionBar.removeMessage(player);
+						player.sendActionBar(Component.text().color(NamedTextColor.DARK_GREEN)
+								.append(Component.text(I.t("Rendering finished!"))).build());
+
+						if (result.give(player)
+								&& (result instanceof PosterMap && !((PosterMap) result).hasColumnData())) {
+							info(I.t("The rendered map was too big to fit in your inventory."));
+							info(I.t("Use '/maptool getremaining' to get the remaining maps."));
+						}
+					});
+		} finally {
+			ActionBar.removeMessage(player);
+		}
+	}
+
+	@Override
+	public boolean canExecute(CommandSender sender) {
+		return Permissions.NEW.grantedTo(sender);
+	}
 }

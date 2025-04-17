@@ -40,68 +40,78 @@ import java.util.PropertyResourceBundle;
 import java.util.ResourceBundle;
 
 public class ZLibResourceBundleControl extends ResourceBundle.Control {
-    private final File bundleFile;
-    private final String resourceReference;
+	private final File bundleFile;
+	private final String resourceReference;
 
-    public ZLibResourceBundleControl(File bundleFile) {
-        this.bundleFile = bundleFile;
-        this.resourceReference = null;
-    }
+	public ZLibResourceBundleControl(File bundleFile) {
+		this.bundleFile = bundleFile;
+		this.resourceReference = null;
+	}
 
-    public ZLibResourceBundleControl(String resourceReference) {
-        this.bundleFile = null;
-        this.resourceReference = resourceReference;
-    }
+	public ZLibResourceBundleControl(String resourceReference) {
+		this.bundleFile = null;
+		this.resourceReference = resourceReference;
+	}
 
-    /**
-     * <p>Uses the file name as the bundle name.</p>
-     *
-     * <hr>
-     * {@inheritDoc}
-     */
-    @Override
-    public String toBundleName(String baseName, Locale locale) {
-        final String[] nameParts = (bundleFile != null ? bundleFile.getName() : Objects.requireNonNull(resourceReference)).split("\\."); // if bundleFile is null, resourceReference should not be null. See constructors.
+	/**
+	 * <p>
+	 * Uses the file name as the bundle name.
+	 * </p>
+	 *
+	 * <hr>
+	 * {@inheritDoc}
+	 */
+	@Override
+	public String toBundleName(String baseName, Locale locale) {
+		final String[] nameParts = (bundleFile != null ? bundleFile.getName()
+				: Objects.requireNonNull(resourceReference)).split("\\."); // if bundleFile is null, resourceReference
+																			// should not be null. See constructors.
 
-        if (nameParts.length >= 2) {
-            nameParts[nameParts.length - 1] = "";
-        }
+		if (nameParts.length >= 2) {
+			nameParts[nameParts.length - 1] = "";
+		}
 
-        return baseName + "." + String.join(".", nameParts);
-    }
+		return baseName + "." + String.join(".", nameParts);
+	}
 
-    /**
-     * <p>Loads the bundles from the file system instead of the JAR file, to allow modifications by
-     * the end user, if a file was provided.</p>
-     *
-     * <hr>
-     * {@inheritDoc}
-     */
-    @Override
-    public ResourceBundle newBundle(String baseName, Locale locale, String format, ClassLoader loader, boolean reload)
-            throws IllegalAccessException, InstantiationException, IOException {
-        if (format.equals("java.properties") && bundleFile != null) {
-            final ResourceBundle bundle;
-            try (InputStream stream = new FileInputStream(bundleFile)) {
-                bundle = new PropertyResourceBundle(stream);
-            }
+	/**
+	 * <p>
+	 * Loads the bundles from the file system instead of the JAR file, to allow
+	 * modifications by the end user, if a file was provided.
+	 * </p>
+	 *
+	 * <hr>
+	 * {@inheritDoc}
+	 */
+	@Override
+	public ResourceBundle newBundle(String baseName, Locale locale, String format, ClassLoader loader, boolean reload)
+			throws IllegalAccessException, InstantiationException, IOException {
+		if (format.equals("java.properties") && bundleFile != null) {
+			final ResourceBundle bundle;
+			try (InputStream stream = new FileInputStream(bundleFile)) {
+				bundle = new PropertyResourceBundle(stream);
+			}
 
-            return bundle;
-        }
+			return bundle;
+		}
 
-        return super.newBundle(baseName, locale, format, loader, reload);
-    }
+		return super.newBundle(baseName, locale, format, loader, reload);
+	}
 
-    /**
-     * <p>The bundles are only loaded on startup, one time, so the cache is not needed.<br>
-     * Plus, the cache may cause problems if one reloads the plugin to update the translation.</p>
-     *
-     * <hr>
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean needsReload(String baseName, Locale locale, String format, ClassLoader loader, ResourceBundle bundle,
-                               long loadTime) {
-        return true;
-    }
+	/**
+	 * <p>
+	 * The bundles are only loaded on startup, one time, so the cache is not
+	 * needed.<br>
+	 * Plus, the cache may cause problems if one reloads the plugin to update the
+	 * translation.
+	 * </p>
+	 *
+	 * <hr>
+	 * {@inheritDoc}
+	 */
+	@Override
+	public boolean needsReload(String baseName, Locale locale, String format, ClassLoader loader, ResourceBundle bundle,
+			long loadTime) {
+		return true;
+	}
 }

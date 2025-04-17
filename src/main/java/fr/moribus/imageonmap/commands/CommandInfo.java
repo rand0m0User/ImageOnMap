@@ -36,20 +36,20 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.TYPE})
+@Target({ ElementType.TYPE })
 public @interface CommandInfo {
-    /**
-     * The name of the command.
-     */
-    String name();
+	/**
+	 * The name of the command.
+	 */
+	String name();
 
-    /**
-     * The "usage" description.
-     */
-    String usageParameters() default "";
+	/**
+	 * The "usage" description.
+	 */
+	String usageParameters() default "";
 
-    /**
-     * Aliases for this command.
-     */
-    String[] aliases() default {};
+	/**
+	 * Aliases for this command.
+	 */
+	String[] aliases() default {};
 }

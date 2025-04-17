@@ -36,9 +36,11 @@
 
 package fr.moribus.imageonmap.map;
 
-import fr.moribus.imageonmap.ImageOnMap;
-import fr.moribus.imageonmap.i18n.I;
-import fr.moribus.imageonmap.ui.MapItemManager;
+import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
@@ -48,171 +50,175 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
-import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import fr.moribus.imageonmap.ImageOnMap;
+import fr.moribus.imageonmap.i18n.I;
+import fr.moribus.imageonmap.ui.MapItemManager;
 
 public abstract class ImageMap implements ConfigurationSerializable {
-    public static final int WIDTH = 128;
-    public static final int HEIGHT = 128;
-    /// The default display name of a map
-    public static final String DEFAULT_NAME = I.t("Map");
-    private final UUID userUUID;
-    private final Type mapType;
-    private String id;
-    private String name;
+	public static final int WIDTH = 128;
+	public static final int HEIGHT = 128;
+	/// The default display name of a map
+	public static final String DEFAULT_NAME = I.t("Map");
+	private final UUID userUUID;
+	private final Type mapType;
+	private String id;
+	private String hash_PDQ;
+	private String name;
 
-    protected ImageMap(UUID userUUID, Type mapType, String id, String name) {
-        this.userUUID = userUUID;
-        this.mapType = mapType;
-        this.id = id;
-        this.name = name;
+	protected ImageMap(UUID userUUID, Type mapType, String id, String name, String hash_PDQ) {
+		this.userUUID = userUUID;
+		this.mapType = mapType;
+		this.id = id;
+		this.name = name;
+		this.hash_PDQ = hash_PDQ;
 
-        if (this.id == null) {
-            if (this.name == null) {
-                this.name = DEFAULT_NAME;
-            }
-            this.id = MapManager.getNextAvailableMapID(this.name, userUUID);
-        }
-    }
+		if (this.id == null) {
+			if (this.name == null) {
+				this.name = DEFAULT_NAME;
+			}
+			this.id = MapManager.getNextAvailableMapID(this.name, userUUID);
+		}
+	}
 
-    protected ImageMap(Map<String, Object> map, UUID userUUID, Type mapType) throws InvalidConfigurationException {
-        this(userUUID, mapType,
-                getNullableFieldValue(map, "id"),
-                getNullableFieldValue(map, "name"));
+	protected ImageMap(Map<String, Object> map, UUID userUUID, Type mapType) throws InvalidConfigurationException {
+		this(userUUID, mapType, getNullableFieldValue(map, "id"), getNullableFieldValue(map, "name"),
+				getNullableFieldValue(map, "hash_PDQ"));
 
-    }
+	}
 
-    public static Path getFullImageFile(int mapIDstart, int mapIDend) {
-        return ImageOnMap.getPlugin().getImagesDirectory().resolve("_" + mapIDstart + "-" + mapIDend + ".png");
-    }
+	public static Path getFullImageFile(int mapIDstart, int mapIDend) {
+		return ImageOnMap.getPlugin().getImagesDirectory().resolve("_" + mapIDstart + "-" + mapIDend + ".png");
+	}
 
-    public static ImageMap fromConfig(Map<String, Object> map, UUID userUUID) throws InvalidConfigurationException {
-        Type mapType;
-        try {
-            mapType = Type.valueOf((String) map.get("type"));
-        } catch (ClassCastException ex) {
-            throw new InvalidConfigurationException(ex);
-        }
+	public static ImageMap fromConfig(Map<String, Object> map, UUID userUUID) throws InvalidConfigurationException {
+		Type mapType;
+		try {
+			mapType = Type.valueOf((String) map.get("type"));
+		} catch (ClassCastException ex) {
+			throw new InvalidConfigurationException(ex);
+		}
 
-        return switch (mapType) {
-            case SINGLE -> new SingleMap(map, userUUID);
-            case POSTER -> new PosterMap(map, userUUID);
-        };
-    }
+		return switch (mapType) {
+		case SINGLE -> new SingleMap(map, userUUID);
+		case POSTER -> new PosterMap(map, userUUID);
+		};
+	}
 
-    @SuppressWarnings("unchecked")
-    public static Integer[] getSize(UUID playerUUID, String id) {
+	@SuppressWarnings("unchecked")
+	public static Integer[] getSize(UUID playerUUID, String id) {
 
-        ConfigurationSection section =
-                MapManager.getPlayerMapStore(playerUUID).getToolConfig().getConfigurationSection("PlayerMapStore");
+		ConfigurationSection section = MapManager.getPlayerMapStore(playerUUID).getToolConfig()
+				.getConfigurationSection("PlayerMapStore");
 
-        if (section == null) {
-            return null;
-        }
-        List<Map<String, Object>> list = (List<Map<String, Object>>) section.getList("mapList");
-        if (list == null) {
-            return null;
-        }
+		if (section == null) {
+			return null;
+		}
+		List<Map<String, Object>> list = (List<Map<String, Object>>) section.getList("mapList");
+		if (list == null) {
+			return null;
+		}
 
-        for (Map<String, Object> tmpMap : list) {
-            if (tmpMap.get("id").equals(id)) {
-                return new Integer[]{(Integer) tmpMap.get("columns"), (Integer) tmpMap.get("rows")};
-            }
-        }
-        return null;
-    }
+		for (Map<String, Object> tmpMap : list) {
+			if (tmpMap.get("id").equals(id)) {
+				return new Integer[] { (Integer) tmpMap.get("columns"), (Integer) tmpMap.get("rows") };
+			}
+		}
+		return null;
+	}
 
-    protected static <T> T getFieldValue(Map<String, Object> map, String fieldName)
-            throws InvalidConfigurationException {
-        T value = getNullableFieldValue(map, fieldName);
-        if (value == null) {
-            throw new InvalidConfigurationException("Field value not found for \"" + fieldName + "\"");
-        }
-        return value;
-    }
+	protected static <T> T getFieldValue(Map<String, Object> map, String fieldName)
+			throws InvalidConfigurationException {
+		T value = getNullableFieldValue(map, fieldName);
+		if (value == null) {
+			throw new InvalidConfigurationException("Field value not found for \"" + fieldName + "\"");
+		}
+		return value;
+	}
 
-    @SuppressWarnings("unchecked")
-    protected static <T> T getNullableFieldValue(Map<String, Object> map, String fieldName)
-            throws InvalidConfigurationException {
-        try {
-            return (T) map.get(fieldName);
-        } catch (ClassCastException ex) {
-            throw new InvalidConfigurationException("Invalid field \"" + fieldName + "\"", ex);
-        }
-    }
+	@SuppressWarnings("unchecked")
+	protected static <T> T getNullableFieldValue(Map<String, Object> map, String fieldName)
+			throws InvalidConfigurationException {
+		try {
+			return (T) map.get(fieldName);
+		} catch (ClassCastException ex) {
+			throw new InvalidConfigurationException("Invalid field \"" + fieldName + "\"", ex);
+		}
+	}
 
-    public abstract int[] getMapsIDs();
+	public abstract int[] getMapsIDs();
 
-    /* ====== Serialization methods ====== */
+	/* ====== Serialization methods ====== */
 
-    public abstract boolean managesMap(int mapID);
+	public abstract boolean managesMap(int mapID);
 
-    public boolean managesMap(ItemStack item) {
-        if (item == null) {
-            return false;
-        }
-        if (item.getType() != Material.FILLED_MAP) {
-            return false;
-        }
-        return managesMap(MapManager.getMapIdFromItemStack(item));
-    }
+	public boolean managesMap(ItemStack item) {
+		if (item == null) {
+			return false;
+		}
+		if (item.getType() != Material.FILLED_MAP) {
+			return false;
+		}
+		return managesMap(MapManager.getMapIdFromItemStack(item));
+	}
 
-    //
-    public abstract int getMapCount();
+	//
+	public abstract int getMapCount();
 
-    //
+	//
 
-    public boolean give(Player player) {
-        return MapItemManager.give(player, this);
-    }
+	public boolean give(Player player) {
+		return MapItemManager.give(player, this);
+	}
 
-    protected abstract void postSerialize(Map<String, Object> map);
+	protected abstract void postSerialize(Map<String, Object> map);
 
-    @Override
-    public @NotNull Map<String, Object> serialize() {
-        Map<String, Object> map = new HashMap<>();
-        map.put("id", getId());
-        map.put("type", mapType.toString());
-        map.put("name", getName());
-        this.postSerialize(map);
-        return map;
-    }
+	@Override
+	public @NotNull Map<String, Object> serialize() {
+		Map<String, Object> map = new HashMap<>();
+		map.put("id", getId());
+		map.put("type", mapType.toString());
+		map.put("name", getName());
+		map.put("hash_PDQ", getHash());
+		this.postSerialize(map);
+		return map;
+	}
 
-    public UUID getUserUUID() {
-        return userUUID;
-    }
+	public String getHash() {
+		return hash_PDQ;
 
+	}
 
-    /* ====== Getters & Setters ====== */
+	public UUID getUserUUID() {
+		return userUUID;
+	}
 
-    public synchronized String getName() {
-        return name;
-    }
+	/* ====== Getters & Setters ====== */
 
-    public synchronized String getId() {
-        return id;
-    }
+	public synchronized String getName() {
+		return name;
+	}
 
-    public synchronized Type getType() {
-        return mapType;
-    }
+	public synchronized String getId() {
+		return id;
+	}
 
-    public synchronized void rename(String id, String name) {
-        this.id = id;
-        this.name = name;
-    }
+	public synchronized Type getType() {
+		return mapType;
+	}
 
-    public void rename(String name) {
-        if (getName().equals(name)) {
-            return;
-        }
-        rename(MapManager.getNextAvailableMapID(name, getUserUUID()), name);
-    }
+	public synchronized void rename(String id, String name) {
+		this.id = id;
+		this.name = name;
+	}
 
-    public enum Type {
-        SINGLE, POSTER
-    }
+	public void rename(String name) {
+		if (getName().equals(name)) {
+			return;
+		}
+		rename(MapManager.getNextAvailableMapID(name, getUserUUID()), name);
+	}
+
+	public enum Type {
+		SINGLE, POSTER
+	}
 }

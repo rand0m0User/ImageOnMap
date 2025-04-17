@@ -36,9 +36,6 @@
 
 package fr.moribus.imageonmap.map;
 
-import fr.moribus.imageonmap.ImageOnMap;
-import fr.moribus.imageonmap.PluginConfiguration;
-import fr.moribus.imageonmap.map.MapManagerException.Reason;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -58,208 +55,213 @@ import org.bukkit.configuration.serialization.ConfigurationSerializable;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
+import fr.moribus.imageonmap.ImageOnMap;
+import fr.moribus.imageonmap.PluginConfiguration;
+import fr.moribus.imageonmap.map.MapManagerException.Reason;
+
 public class PlayerMapStore implements ConfigurationSerializable {
-    private final UUID playerUUID;
-    private final ArrayList<ImageMap> mapList = new ArrayList<>();
-    private int mapCount = 0;
-    private FileConfiguration mapConfig = null;
-    private Path mapsFile = null;
+	private final UUID playerUUID;
+	private final ArrayList<ImageMap> mapList = new ArrayList<>();
+	private int mapCount = 0;
+	private FileConfiguration mapConfig = null;
+	private Path mapsFile = null;
 
-    public PlayerMapStore(UUID playerUUID) {
-        this.playerUUID = playerUUID;
-    }
+	public PlayerMapStore(UUID playerUUID) {
+		this.playerUUID = playerUUID;
+	}
 
-    public synchronized boolean managesMap(int mapID) {
-        for (ImageMap map : mapList) {
-            if (map.managesMap(mapID)) {
-                return true;
-            }
-        }
-        return false;
-    }
+	public synchronized boolean managesMap(int mapID) {
+		for (ImageMap map : mapList) {
+			if (map.managesMap(mapID)) {
+				return true;
+			}
+		}
+		return false;
+	}
 
-    public synchronized boolean managesMap(ItemStack item) {
-        if (item == null) {
-            return false;
-        }
-        if (item.getType() != Material.FILLED_MAP) {
-            return false;
-        }
+	public synchronized boolean managesMap(ItemStack item) {
+		if (item == null) {
+			return false;
+		}
+		if (item.getType() != Material.FILLED_MAP) {
+			return false;
+		}
 
-        for (ImageMap map : mapList) {
-            if (map.managesMap(item)) {
-                return true;
-            }
-        }
-        return false;
-    }
+		for (ImageMap map : mapList) {
+			if (map.managesMap(item)) {
+				return true;
+			}
+		}
+		return false;
+	}
 
-    public synchronized void addMap(ImageMap map) throws MapManagerException {
-        checkMapLimit(map);
-        insertMap(map);
-    }
+	public synchronized void addMap(ImageMap map) throws MapManagerException {
+		checkMapLimit(map);
+		insertMap(map);
+	}
 
-    public synchronized void insertMap(ImageMap map) {
-        add_Map(map);
-    }
+	public synchronized void insertMap(ImageMap map) {
+		add_Map(map);
+	}
 
-    private void add_Map(ImageMap map) {
-        mapList.add(map);
-        mapCount += map.getMapCount();
-    }
+	private void add_Map(ImageMap map) {
+		mapList.add(map);
+		mapCount += map.getMapCount();
+	}
 
-    public synchronized void deleteMap(ImageMap map) throws MapManagerException {
-        remove_Map(map);
-    }
+	public synchronized void deleteMap(ImageMap map) throws MapManagerException {
+		remove_Map(map);
+	}
 
-    private void remove_Map(ImageMap map) throws MapManagerException {
-        if (!mapList.remove(map)) {
-            throw new MapManagerException(Reason.IMAGEMAP_DOES_NOT_EXIST);
-        }
-        mapCount -= map.getMapCount();
-    }
+	private void remove_Map(ImageMap map) throws MapManagerException {
+		if (!mapList.remove(map)) {
+			throw new MapManagerException(Reason.IMAGEMAP_DOES_NOT_EXIST);
+		}
+		mapCount -= map.getMapCount();
+	}
 
-    public synchronized boolean mapExists(String id) {
-        for (ImageMap map : mapList) {
-            if (map.getId().equals(id)) {
-                return true;
-            }
-        }
+	public synchronized boolean mapExists(String id) {
+		for (ImageMap map : mapList) {
+			if (map.getId().equals(id)) {
+				return true;
+			}
+		}
 
-        return false;
-    }
+		return false;
+	}
 
-    public String getNextAvailableMapID(String mapId) {
-        if (!mapExists(mapId)) {
-            return mapId;
-        }
-        int id = 0;
+	public String getNextAvailableMapID(String mapId) {
+		if (!mapExists(mapId)) {
+			return mapId;
+		}
+		int id = 0;
 
-        do {
-            id++;
-        } while (mapExists(mapId + "-" + id));
+		do {
+			id++;
+		} while (mapExists(mapId + "-" + id));
 
-        return mapId + "-" + id;
-    }
+		return mapId + "-" + id;
+	}
 
-    public synchronized List<ImageMap> getMapList() {
-        return new ArrayList<>(mapList);
-    }
+	public synchronized List<ImageMap> getMapList() {
+		return new ArrayList<>(mapList);
+	}
 
-    public synchronized ImageMap[] getMaps() {
-        return mapList.toArray(new ImageMap[0]);
-    }
+	public synchronized ImageMap[] getMaps() {
+		return mapList.toArray(new ImageMap[0]);
+	}
 
-    public synchronized ImageMap getMap(String mapId) {
-        for (ImageMap map : mapList) {
-            if (map.getId().equals(mapId)) {
-                return map;
-            }
-        }
+	public synchronized ImageMap getMap(String mapId) {
+		for (ImageMap map : mapList) {
+			if (map.getId().equals(mapId)) {
+				return map;
+			}
+		}
 
-        return null;
-    }
+		return null;
+	}
 
-    /* ===== Getters & Setters ===== */
+	/* ===== Getters & Setters ===== */
 
-    public void checkMapLimit(ImageMap map) throws MapManagerException {
-        checkMapLimit(map.getMapCount());
-    }
+	public void checkMapLimit(ImageMap map) throws MapManagerException {
+		checkMapLimit(map.getMapCount());
+	}
 
-    public void checkMapLimit(int newMapsCount) throws MapManagerException {
-        int limit = PluginConfiguration.MAP_PLAYER_LIMIT.get();
-        if (limit <= 0) {
-            return;
-        }
+	public void checkMapLimit(int newMapsCount) throws MapManagerException {
+		int limit = PluginConfiguration.MAP_PLAYER_LIMIT.get();
+		if (limit <= 0) {
+			return;
+		}
 
-        if (getMapCount() + newMapsCount > limit) {
-            throw new MapManagerException(Reason.MAXIMUM_PLAYER_MAPS_EXCEEDED, limit);
-        }
-    }
+		if (getMapCount() + newMapsCount > limit) {
+			throw new MapManagerException(Reason.MAXIMUM_PLAYER_MAPS_EXCEEDED, limit);
+		}
+	}
 
-    public UUID getUUID() {
-        return playerUUID;
-    }
+	public UUID getUUID() {
+		return playerUUID;
+	}
 
-    /* ****** Serializing ***** */
+	/* ****** Serializing ***** */
 
-    public synchronized int getMapCount() {
-        return this.mapCount;
-    }
+	public synchronized int getMapCount() {
+		return this.mapCount;
+	}
 
-    /* ****** Configuration Files management ***** */
+	/* ****** Configuration Files management ***** */
 
-    @Override
-    public @NotNull Map<String, Object> serialize() {
-        Map<String, Object> map = new HashMap<>();
-        List<Map<String, Object>> list = new ArrayList<>();
-        synchronized (this) {
-            for (ImageMap tmpMap : mapList) {
-                list.add(tmpMap.serialize());
-            }
-        }
-        map.put("mapList", list);
-        return map;
-    }
+	@Override
+	public @NotNull Map<String, Object> serialize() {
+		Map<String, Object> map = new HashMap<>();
+		List<Map<String, Object>> list = new ArrayList<>();
+		synchronized (this) {
+			for (ImageMap tmpMap : mapList) {
+				list.add(tmpMap.serialize());
+			}
+		}
+		map.put("mapList", list);
+		return map;
+	}
 
-    private void loadFromConfig(ConfigurationSection section) {
-        if (section == null) {
-            return;
-        }
-        @SuppressWarnings("unchecked")
-        List<Map<String, Object>> list = (List<Map<String, Object>>) section.getList("mapList");
-        if (list == null) {
-            return;
-        }
+	private void loadFromConfig(ConfigurationSection section) {
+		if (section == null) {
+			return;
+		}
+		@SuppressWarnings("unchecked")
+		List<Map<String, Object>> list = (List<Map<String, Object>>) section.getList("mapList");
+		if (list == null) {
+			return;
+		}
 
-        for (Map<String, Object> tmpMap : list) {
-            try {
-                ImageMap newMap = ImageMap.fromConfig(tmpMap, playerUUID);
-                synchronized (this) {
-                    add_Map(newMap);
-                }
-            } catch (InvalidConfigurationException ex) {
-                ImageOnMap.getPlugin().getLogger().log(Level.WARNING, "Could not load map data : ", ex);
-            }
-        }
+		for (Map<String, Object> tmpMap : list) {
+			try {
+				ImageMap newMap = ImageMap.fromConfig(tmpMap, playerUUID);
+				synchronized (this) {
+					add_Map(newMap);
+				}
+			} catch (InvalidConfigurationException ex) {
+				ImageOnMap.getPlugin().getLogger().log(Level.WARNING, "Could not load map data : ", ex);
+			}
+		}
 
-        try {
-            checkMapLimit(0);
-        } catch (MapManagerException ex) {
-            ImageOnMap.getPlugin().getLogger().log(Level.WARNING,
-                    "Map limit exceeded for player " + playerUUID.toString() + " (" + mapList.size() + " maps loaded)");
-        }
-    }
+		try {
+			checkMapLimit(0);
+		} catch (MapManagerException ex) {
+			ImageOnMap.getPlugin().getLogger().log(Level.WARNING,
+					"Map limit exceeded for player " + playerUUID.toString() + " (" + mapList.size() + " maps loaded)");
+		}
+	}
 
-    public FileConfiguration getToolConfig() {
-        if (mapConfig == null) {
-            load();
-        }
+	public FileConfiguration getToolConfig() {
+		if (mapConfig == null) {
+			load();
+		}
 
-        return mapConfig;
-    }
+		return mapConfig;
+	}
 
-    public void load() {
-        if (mapsFile == null) {
-            mapsFile = ImageOnMap.getPlugin().getMapsDirectory().resolve(playerUUID.toString() + ".yml");
-            if (!Files.isRegularFile(mapsFile)) {
-                save();
-            }
-        }
-        mapConfig = YamlConfiguration.loadConfiguration(mapsFile.toFile());
-        loadFromConfig(getToolConfig().getConfigurationSection("PlayerMapStore"));
-    }
+	public void load() {
+		if (mapsFile == null) {
+			mapsFile = ImageOnMap.getPlugin().getMapsDirectory().resolve(playerUUID.toString() + ".yml");
+			if (!Files.isRegularFile(mapsFile)) {
+				save();
+			}
+		}
+		mapConfig = YamlConfiguration.loadConfiguration(mapsFile.toFile());
+		loadFromConfig(getToolConfig().getConfigurationSection("PlayerMapStore"));
+	}
 
-    public void save() {
-        if (mapsFile == null || mapConfig == null) {
-            return;
-        }
-        getToolConfig().set("PlayerMapStore", this.serialize());
-        try {
-            getToolConfig().save(mapsFile.toFile());
+	public void save() {
+		if (mapsFile == null || mapConfig == null) {
+			return;
+		}
+		getToolConfig().set("PlayerMapStore", this.serialize());
+		try {
+			getToolConfig().save(mapsFile.toFile());
 
-        } catch (IOException ex) {
-            ImageOnMap.getPlugin().getLogger().log(Level.SEVERE, "Could not save maps file for player '" + playerUUID.toString() + "'", ex);
-        }
-    }
+		} catch (IOException ex) {
+			ImageOnMap.getPlugin().getLogger().log(Level.SEVERE,
+					"Could not save maps file for player '" + playerUUID.toString() + "'", ex);
+		}
+	}
 }

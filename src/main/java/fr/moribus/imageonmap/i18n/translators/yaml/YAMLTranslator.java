@@ -30,39 +30,40 @@
 
 package fr.moribus.imageonmap.i18n.translators.yaml;
 
-import fr.moribus.imageonmap.ImageOnMap;
-import fr.moribus.imageonmap.i18n.I;
-import fr.moribus.imageonmap.i18n.translators.Translation;
-import fr.moribus.imageonmap.i18n.translators.Translator;
 import java.io.File;
 import java.util.Collections;
 import java.util.Locale;
 import java.util.Map;
+
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 
+import fr.moribus.imageonmap.ImageOnMap;
+import fr.moribus.imageonmap.i18n.I;
+import fr.moribus.imageonmap.i18n.translators.Translation;
+import fr.moribus.imageonmap.i18n.translators.Translator;
 
 /**
  * Loads translations stored in a YAML file.
  *
  * <ul>
  *
- *     <li>
- *         This translator <strong>does not</strong> support plurals. If plurals are used, the first
- *         string will always be used, and the other, ignored.
- *     </li>
+ * <li>This translator <strong>does not</strong> support plurals. If plurals are
+ * used, the first string will always be used, and the other, ignored.</li>
  *
- *     <li>
- *         This translator <strong>does</strong> support contexts. The context is the superkey in the
- *         YAML structure (see below). Without context, the default one is {@code keys}.
- *     </li>
+ * <li>This translator <strong>does</strong> support contexts. The context is
+ * the superkey in the YAML structure (see below). Without context, the default
+ * one is {@code keys}.</li>
  *
  * </ul>
  *
  *
  * <h3>YAML structure</h3>
  *
- * <p>The YAML structure must be this one:</p>
+ * <p>
+ * The YAML structure must be this one:
+ * </p>
+ * 
  * <pre>
  *     author: "The author name."
  *     team: "The translation team name. Defaults to the author if undefined."
@@ -76,7 +77,9 @@ import org.bukkit.configuration.file.YamlConfiguration;
  *         greetings:
  *             hi: "Hi!"
  * </pre>
- * <p>With this structure, the keys are retrieved as follow:</p>
+ * <p>
+ * With this structure, the keys are retrieved as follow:
+ * </p>
  *
  * <pre>
  *     {@link I#t I.t}("greetings.hi")                       # Returns "Hi there"
@@ -85,34 +88,34 @@ import org.bukkit.configuration.file.YamlConfiguration;
  */
 public class YAMLTranslator extends Translator {
 
-    public YAMLTranslator(Locale locale, File file) {
-        super(locale, file);
-    }
+	public YAMLTranslator(Locale locale, File file) {
+		super(locale, file);
+	}
 
-    public YAMLTranslator(Locale locale, String resourceReference) {
-        super(locale, resourceReference);
-    }
+	public YAMLTranslator(Locale locale, String resourceReference) {
+		super(locale, resourceReference);
+	}
 
-    @Override
-    protected void load() {
-        final YamlConfiguration configuration = YamlConfiguration.loadConfiguration(getReader());
+	@Override
+	protected void load() {
+		final YamlConfiguration configuration = YamlConfiguration.loadConfiguration(getReader());
 
-        if (configuration.getKeys(false).isEmpty()) {
-            ImageOnMap.getPlugin().getLogger().severe("Cannot load the " + getFilePath() + " translation file.");
-            return;
-        }
+		if (configuration.getKeys(false).isEmpty()) {
+			ImageOnMap.getPlugin().getLogger().severe("Cannot load the " + getFilePath() + " translation file.");
+			return;
+		}
 
-        for (final Map.Entry<String, Object> entry : configuration.getValues(false).entrySet()) {
-            if (entry.getValue() instanceof final ConfigurationSection context) {
-                final String contextName = entry.getKey().equals("keys") ? null : entry.getKey();
+		for (final Map.Entry<String, Object> entry : configuration.getValues(false).entrySet()) {
+			if (entry.getValue() instanceof final ConfigurationSection context) {
+				final String contextName = entry.getKey().equals("keys") ? null : entry.getKey();
 
-                for (Map.Entry<String, Object> translationEntry : context.getValues(true).entrySet()) {
-                    if (!(translationEntry.getValue() instanceof ConfigurationSection)) {
-                        registerTranslation(new Translation(contextName, translationEntry.getKey(),
-                                Collections.singletonList(translationEntry.getValue().toString())));
-                    }
-                }
-            }
-        }
-    }
+				for (Map.Entry<String, Object> translationEntry : context.getValues(true).entrySet()) {
+					if (!(translationEntry.getValue() instanceof ConfigurationSection)) {
+						registerTranslation(new Translation(contextName, translationEntry.getKey(),
+								Collections.singletonList(translationEntry.getValue().toString())));
+					}
+				}
+			}
+		}
+	}
 }

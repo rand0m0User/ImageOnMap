@@ -36,8 +36,8 @@
 
 package fr.moribus.imageonmap.image;
 
-import fr.moribus.imageonmap.ImageOnMap;
 import java.awt.image.BufferedImage;
+
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.map.MapCanvas;
@@ -45,64 +45,67 @@ import org.bukkit.map.MapRenderer;
 import org.bukkit.map.MapView;
 import org.jetbrains.annotations.NotNull;
 
+import fr.moribus.imageonmap.ImageOnMap;
+
 public class Renderer extends MapRenderer {
-    private BufferedImage image = null;
+	private BufferedImage image = null;
 
-    private Renderer() {
-    }
+	private Renderer() {
+	}
 
-    public static boolean isHandled(MapView map) {
-        if (map == null) {
-            return false;
-        }
-        for (MapRenderer renderer : map.getRenderers()) {
-            if (renderer instanceof Renderer) {
-                return true;
-            }
-        }
-        return false;
-    }
+	public static boolean isHandled(MapView map) {
+		if (map == null) {
+			return false;
+		}
+		for (MapRenderer renderer : map.getRenderers()) {
+			if (renderer instanceof Renderer) {
+				return true;
+			}
+		}
+		return false;
+	}
 
-    public static void installRenderer(PosterImage image, int[] mapsIds) {
-        for (int i = 0; i < mapsIds.length; i++) {
-            installRenderer(image.getImageAt(i), mapsIds[i]);
-        }
-    }
+	public static void installRenderer(PosterImage image, int[] mapsIds) {
+		for (int i = 0; i < mapsIds.length; i++) {
+			installRenderer(image.getImageAt(i), mapsIds[i]);
+		}
+	}
 
-    @SuppressWarnings("deprecation")
-    public static void installRenderer(BufferedImage image, int mapID) {
-        MapView map = Bukkit.getMap(mapID);
-        if (map == null) {
-            ImageOnMap.getPlugin().getLogger().warning("Could not install renderer for map " + mapID + ": the Minecraft map does not exist");
-        } else {
-            installRenderer(map).setImage(image);
-        }
-    }
+	@SuppressWarnings("deprecation")
+	public static void installRenderer(BufferedImage image, int mapID) {
+		MapView map = Bukkit.getMap(mapID);
+		if (map == null) {
+			ImageOnMap.getPlugin().getLogger()
+					.warning("Could not install renderer for map " + mapID + ": the Minecraft map does not exist");
+		} else {
+			installRenderer(map).setImage(image);
+		}
+	}
 
-    public static Renderer installRenderer(MapView map) {
-        Renderer renderer = new Renderer();
-        removeRenderers(map);
-        map.addRenderer(renderer);
-        return renderer;
-    }
+	public static Renderer installRenderer(MapView map) {
+		Renderer renderer = new Renderer();
+		removeRenderers(map);
+		map.addRenderer(renderer);
+		return renderer;
+	}
 
-    public static void removeRenderers(MapView map) {
-        for (MapRenderer renderer : map.getRenderers()) {
-            map.removeRenderer(renderer);
-        }
-    }
+	public static void removeRenderers(MapView map) {
+		for (MapRenderer renderer : map.getRenderers()) {
+			map.removeRenderer(renderer);
+		}
+	}
 
-    @Override
-    public void render(@NotNull MapView v, final @NotNull MapCanvas canvas, @NotNull Player p) {
-        //Render only once to avoid overloading the server
-        if (image == null) {
-            return;
-        }
-        canvas.drawImage(0, 0, image);
-        image = null;
-    }
+	@Override
+	public void render(@NotNull MapView v, final @NotNull MapCanvas canvas, @NotNull Player p) {
+		// Render only once to avoid overloading the server
+		if (image == null) {
+			return;
+		}
+		canvas.drawImage(0, 0, image);
+		image = null;
+	}
 
-    public void setImage(BufferedImage image) {
-        this.image = image;
-    }
+	public void setImage(BufferedImage image) {
+		this.image = image;
+	}
 }

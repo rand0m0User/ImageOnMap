@@ -32,40 +32,40 @@ package fr.moribus.imageonmap.i18n.translators;
 
 import java.util.List;
 
-
 /**
  * Represents a translation.
  */
 public record Translation(String context, String original, List<String> translations) {
 
-    /**
-     * Gets the original, untranslated, string.
-     *
-     * @return The original, untranslated, string.
-     */
-    @Override
-    public String original() {
-        return original;
-    }
+	/**
+	 * Gets the original, untranslated, string.
+	 *
+	 * @return The original, untranslated, string.
+	 */
+	@Override
+	public String original() {
+		return original;
+	}
 
-    /**
-     * Gets the translation context.
-     *
-     * @return The translation context, or {@code null} if no context was set. Note that an empty
-     * context string and a {@code null} one do not mean the same thing.
-     */
-    @Override
-    public String context() {
-        return context;
-    }
+	/**
+	 * Gets the translation context.
+	 *
+	 * @return The translation context, or {@code null} if no context was set. Note
+	 *         that an empty context string and a {@code null} one do not mean the
+	 *         same thing.
+	 */
+	@Override
+	public String context() {
+		return context;
+	}
 
-    /**
-     * Gets all of the available translations.
-     *
-     * @return All the available translations.
-     */
-    @Override
-    public List<String> translations() {
-        return translations;
-    }
+	/**
+	 * Gets all of the available translations.
+	 *
+	 * @return All the available translations.
+	 */
+	@Override
+	public List<String> translations() {
+		return translations;
+	}
 }

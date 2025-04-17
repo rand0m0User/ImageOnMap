@@ -36,112 +36,112 @@
 
 package fr.moribus.imageonmap.commands.maptool;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
+
 import fr.moribus.imageonmap.ImageOnMap;
 import fr.moribus.imageonmap.Permissions;
-import fr.moribus.imageonmap.commands.IoMCommand;
-import fr.moribus.imageonmap.map.ImageMap;
-import fr.moribus.imageonmap.map.MapManager;
-import fr.moribus.imageonmap.map.MapManagerException;
 import fr.moribus.imageonmap.commands.CommandException;
 import fr.moribus.imageonmap.commands.CommandInfo;
 import fr.moribus.imageonmap.commands.Commands;
+import fr.moribus.imageonmap.commands.IoMCommand;
 import fr.moribus.imageonmap.commands.WithFlags;
 import fr.moribus.imageonmap.i18n.I;
+import fr.moribus.imageonmap.map.ImageMap;
+import fr.moribus.imageonmap.map.MapManager;
+import fr.moribus.imageonmap.map.MapManagerException;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 
-import java.util.ArrayList;
-import java.util.List;
-import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
-
 @CommandInfo(name = "delete", usageParameters = "[player name]:<map name> [--confirm]")
-@WithFlags({"confirm"})
+@WithFlags({ "confirm" })
 public class DeleteCommand extends IoMCommand {
 
-    private static Component deleteMsg(String playerName, ImageMap map) {
-        return Component.text().append(Component.text(I.t("You are going to delete") + " " + map.getId()))
-                .color(NamedTextColor.GOLD)
-                .append(Component.text(". " + I.t("Are you sure ? ")))
-                .color(NamedTextColor.WHITE)
-                .append(Component.text("[Confirm]"))
-                .color(NamedTextColor.GREEN)
-                .hoverEvent(HoverEvent.showText(Component.text(I.t("{red}This map will be deleted {bold}forever{red}!"))))
-                .clickEvent(ClickEvent.runCommand(Commands.getCommandInfo(DeleteCommand.class).build(playerName + ":" + "\"" + map.getId() + "\"", "--confirm")))
-                .build();
-    }
+	private static Component deleteMsg(String playerName, ImageMap map) {
+		return Component.text().append(Component.text(I.t("You are going to delete") + " " + map.getId()))
+				.color(NamedTextColor.GOLD).append(Component.text(". " + I.t("Are you sure ? ")))
+				.color(NamedTextColor.WHITE).append(Component.text("[Confirm]")).color(NamedTextColor.GREEN)
+				.hoverEvent(
+						HoverEvent.showText(Component.text(I.t("{red}This map will be deleted {bold}forever{red}!"))))
+				.clickEvent(ClickEvent.runCommand(Commands.getCommandInfo(DeleteCommand.class)
+						.build(playerName + ":" + "\"" + map.getId() + "\"", "--confirm")))
+				.build();
+	}
 
-    @Override
-    protected void run() throws CommandException {
-        ArrayList<String> arguments = getArgs();
-        final boolean confirm = isConfirmed();
+	@Override
+	protected void run() throws CommandException {
+		ArrayList<String> arguments = getArgs();
+		final boolean confirm = isConfirmed();
 
-        if (arguments.size() > 3 || (arguments.size() > 2 && !confirm)) {
-            throwInvalidArgument(I.t("Too many parameters!"));
-            return;
-        }
-        if (arguments.size() < 1) {
-            throwInvalidArgument(I.t("Too few parameters!"));
-            return;
-        }
+		if (arguments.size() > 3 || (arguments.size() > 2 && !confirm)) {
+			throwInvalidArgument(I.t("Too many parameters!"));
+			return;
+		}
+		if (arguments.size() < 1) {
+			throwInvalidArgument(I.t("Too few parameters!"));
+			return;
+		}
 
-        final String playerName;
-        final String mapName;
-        final Player sender = playerSender();
-        if (arguments.size() == 2 || arguments.size() == 3) {
-            if (!Permissions.DELETEOTHER.grantedTo(sender)) {
-                throwNotAuthorized();
-                return;
-            }
+		final String playerName;
+		final String mapName;
+		final Player sender = playerSender();
+		if (arguments.size() == 2 || arguments.size() == 3) {
+			if (!Permissions.DELETEOTHER.grantedTo(sender)) {
+				throwNotAuthorized();
+				return;
+			}
 
-            playerName = arguments.get(0);
-            mapName = arguments.get(1);
-        } else {
-            playerName = sender.getName();
-            mapName = arguments.get(0);
-        }
+			playerName = arguments.get(0);
+			mapName = arguments.get(1);
+		} else {
+			playerName = sender.getName();
+			mapName = arguments.get(0);
+		}
 
-        retrieveUUID(playerName, uuid -> {
-            ImageMap map = MapManager.getMap(uuid, mapName);
+		retrieveUUID(playerName, uuid -> {
+			ImageMap map = MapManager.getMap(uuid, mapName);
 
-            if (map == null) {
-                warning(sender, I.t("This map does not exist."));
-                return;
-            }
+			if (map == null) {
+				warning(sender, I.t("This map does not exist."));
+				return;
+			}
 
-            if (!confirm) {
-                sender.sendMessage(deleteMsg(playerName, map));
-            } else {
-                if (sender.isOnline()) {
-                    MapManager.clear(sender.getInventory(), map);
-                }
+			if (!confirm) {
+				sender.sendMessage(deleteMsg(playerName, map));
+			} else {
+				if (sender.isOnline()) {
+					MapManager.clear(sender.getInventory(), map);
+				}
 
-                try {
-                    MapManager.deleteMap(map);
-                    success(sender, I.t("Map successfully deleted."));
-                } catch (MapManagerException ex) {
-                    ImageOnMap.getPlugin().getLogger().warning(I.t("A non-existent map was requested to be deleted", ex));
-                    warning(sender, I.t("This map does not exist."));
-                }
-            }
-        });
+				try {
+					MapManager.deleteMap(map);
+					success(sender, I.t("Map successfully deleted."));
+				} catch (MapManagerException ex) {
+					ImageOnMap.getPlugin().getLogger()
+							.warning(I.t("A non-existent map was requested to be deleted", ex));
+					warning(sender, I.t("This map does not exist."));
+				}
+			}
+		});
 
+	}
 
-    }
+	@Override
+	protected List<String> complete() throws CommandException {
+		if (args.length == 1) {
+			return getMatchingMapNames(playerSender(), args[0]);
+		}
 
-    @Override
-    protected List<String> complete() throws CommandException {
-        if (args.length == 1) {
-            return getMatchingMapNames(playerSender(), args[0]);
-        }
+		return null;
+	}
 
-        return null;
-    }
-
-    @Override
-    public boolean canExecute(CommandSender sender) {
-        return Permissions.DELETE.grantedTo(sender);
-    }
+	@Override
+	public boolean canExecute(CommandSender sender) {
+		return Permissions.DELETE.grantedTo(sender);
+	}
 }

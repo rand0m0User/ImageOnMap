@@ -36,51 +36,41 @@
 
 package fr.moribus.imageonmap;
 
-
 import org.bukkit.permissions.Permissible;
 
 public enum Permissions {
-    NEW("imageonmap.new", "imageonmap.userender"),
-    LIST("imageonmap.list"),
-    LISTOTHER("imageonmap.listother"),
-    GET("imageonmap.get"),
-    GETOTHER("imageonmap.getother"),
-    RENAME("imageonmap.rename"),
-    PLACE_SPLATTER_MAP("imageonmap.placesplattermap"),
-    REMOVE_SPLATTER_MAP("imageonmap.removesplattermap"),
-    DELETE("imageonmap.delete"),
-    DELETEOTHER("imageonmap.deleteother"),
-    UPDATE("imageonmap.update"),
-    UPDATEOTHER("imageonmap.updateother"),
-    ADMINISTRATIVE("imageonmap.administrative"),
-    BYPASS_SIZE("imageonmap.bypasssize"),
-    GIVE("imageonmap.give");
+	NEW("imageonmap.new", "imageonmap.userender"), LIST("imageonmap.list"), LISTOTHER("imageonmap.listother"),
+	GET("imageonmap.get"), GETOTHER("imageonmap.getother"), RENAME("imageonmap.rename"),
+	PLACE_SPLATTER_MAP("imageonmap.placesplattermap"), REMOVE_SPLATTER_MAP("imageonmap.removesplattermap"),
+	DELETE("imageonmap.delete"), DELETEOTHER("imageonmap.deleteother"), UPDATE("imageonmap.update"),
+	UPDATEOTHER("imageonmap.updateother"), ADMINISTRATIVE("imageonmap.administrative"),
+	BYPASS_SIZE("imageonmap.bypasssize"), GIVE("imageonmap.give"), UNBAN("imageonmap.unban"), BAN("imageonmap.ban");
 
-    private final String permission;
-    private final String[] aliases;
+	private final String permission;
+	private final String[] aliases;
 
-    Permissions(String permission, String... aliases) {
-        this.permission = permission;
-        this.aliases = aliases;
-    }
+	Permissions(String permission, String... aliases) {
+		this.permission = permission;
+		this.aliases = aliases;
+	}
 
-    /**
-     * Checks if this permission is granted to the given permissible.
-     *
-     * @param permissible The permissible to check.
-     * @return {@code true} if this permission is granted to the permissible.
-     */
-    public boolean grantedTo(Permissible permissible) {
-        if (permissible.hasPermission(permission)) {
-            return true;
-        }
+	/**
+	 * Checks if this permission is granted to the given permissible.
+	 *
+	 * @param permissible The permissible to check.
+	 * @return {@code true} if this permission is granted to the permissible.
+	 */
+	public boolean grantedTo(Permissible permissible) {
+		if (permissible.hasPermission(permission)) {
+			return true;
+		}
 
-        for (String alias : aliases) {
-            if (permissible.hasPermission(alias)) {
-                return true;
-            }
-        }
+		for (String alias : aliases) {
+			if (permissible.hasPermission(alias)) {
+				return true;
+			}
+		}
 
-        return false;
-    }
+		return false;
+	}
 }
