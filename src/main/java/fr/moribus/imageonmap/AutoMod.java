@@ -65,7 +65,12 @@ public class AutoMod {
 		String timestr = ImageOnMap.getPlugin().BannedHashes.get(offendinghash).TIMESTR;
 		String reason = ImageOnMap.getPlugin().BannedHashes.get(offendinghash).REASON;
 		boolean perm = timestr.equals("PERM");
-		String msg = PluginConfiguration.BANNED_PDQ_MESSAGE.get();
+		String msg;
+		if (perm) {
+			 msg = PluginConfiguration.PERMBANNED_PDQ_MESSAGE.get();
+		} else {
+			 msg = PluginConfiguration.BANNED_PDQ_MESSAGE.get();
+		}
 		Duration d = null;
 		if (!perm) {
 			d = parseTime(timestr);

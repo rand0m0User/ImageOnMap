@@ -59,6 +59,15 @@ public final class PluginConfiguration {
 		}
 		return "config error";
 	};
+	public static final Supplier<String> PERMBANNED_PDQ_MESSAGE = () -> {
+		FileConfiguration config = PLUGIN.getConfig();
+		if (config.isString("PERMPDQBAN")) {
+			return config.getString("PERMPDQBAN");
+		} else {
+			config.set("PERMPDQBAN", "default");
+		}
+		return "config error";
+	};
 	public static final Supplier<Integer> MAP_GLOBAL_LIMIT = () -> {
 		FileConfiguration config = PLUGIN.getConfig();
 		if (config.isInt("map-global-limit")) {
