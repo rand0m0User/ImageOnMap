@@ -51,6 +51,7 @@ import org.bukkit.Bukkit;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
+import fr.moribus.imageonmap.AutoMod;
 import fr.moribus.imageonmap.ImageOnMap;
 import fr.moribus.imageonmap.Permissions;
 import fr.moribus.imageonmap.PluginConfiguration;
@@ -76,36 +77,6 @@ public class ImageRendererExecutor {
 	@FunctionalInterface
 	interface ExceptionalSupplier<T> {
 		T supply() throws Throwable;
-	}
-
-	private static boolean IsBanned(String hash) {
-		boolean ret = false;
-		Hash256 img = null;
-		try {
-			img = Hash256.fromHexString(hash);
-		} catch (Exception e) {
-			return false; // not a valid hash, should never happen!
-		}
-		for (String dbh : ImageOnMap.getPlugin().BannedHashes) {
-			try {
-				int dist = img.hammingDistance(Hash256.fromHexString(dbh));
-
-				Bukkit.getServer().getConsoleSender()
-						.sendMessage("compare: " + hash.toString() + ", in db: " + dbh + ", hammingDistance: " + dist);
-				// ret |= dist >= 75; // tolerance
-				if (dist <= 10) { // tolerance
-					Bukkit.getServer().getConsoleSender()
-							.sendMessage("PDQ hash of image likly matches! returning ban. user posted image:"
-									+ hash.toString() + ", in db: " + dbh + ", hammingDistance: " + dist);
-					ret |= true;
-				}
-			} catch (Exception e) {
-				return false; // not a valid hash, should never happen!
-			}
-		}
-		return ret;
-
-		// return ImageOnMap.getPlugin().BannedHashes.contains(hash);
 	}
 
 	private static <T> CompletableFuture<T> supply(ExceptionalSupplier<T> supplier) {
@@ -209,8 +180,7 @@ public class ImageRendererExecutor {
 
 			var resizedImage = scaling.resize(image, width * 128, height * 128);
 			String hash = JustGiveMeThePDQ.execute(image);
-			if (IsBanned(hash)) {
-				ImageOnMap.DoFancyBan(playerUUID);
+			if (AutoMod.IsBanned(hash, playerUUID)) {
 				return null;
 			}
 			updateMap(new PosterImage(resizedImage, hash), map.getMapsIDs());
@@ -241,8 +211,7 @@ public class ImageRendererExecutor {
 
 		getMainThread().execute(() -> Renderer.installRenderer(image, mapID));
 		String hash = JustGiveMeThePDQ.execute(image);
-		if (IsBanned(hash)) {
-			ImageOnMap.DoFancyBan(playerUUID);
+		if (AutoMod.IsBanned(hash, playerUUID)) {
 			return null;
 		}
 		return MapManager.createMap(playerUUID, mapID, hash);
@@ -250,11 +219,9 @@ public class ImageRendererExecutor {
 
 	private static ImageMap renderPoster(final BufferedImage image, final UUID playerUUID) throws Throwable {
 		String hash = JustGiveMeThePDQ.execute(image);
-		if (IsBanned(hash)) {
-			ImageOnMap.DoFancyBan(playerUUID);
+		if (AutoMod.IsBanned(hash, playerUUID)) {
 			return null;
 		}
-
 		PosterImage poster = new PosterImage(image, hash);
 
 		int mapCount = poster.getImagesCount();

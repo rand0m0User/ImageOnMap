@@ -580,7 +580,7 @@ msgstr "How to use this?"
 msgid ""
 "Place empty item frames on a wall, enough to host the whole map. Then, right-"
 "click on the bottom-left frame with this map."
-msgstr ""
+"Shift-right-clicking will also make the item frames invisible."
 "Place empty item frames on a wall, enough to host the whole map. Then, right-"
 "click on the bottom-left frame with this map."
 

@@ -43,7 +43,7 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
+import java.util.HashMap;
 import java.util.UUID;
 import java.util.jar.JarFile;
 import java.util.logging.Level;
@@ -52,12 +52,15 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.command.TabCompleter;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
-import fr.moribus.imageonmap.commands.bukkit.*;
+
 import fr.moribus.imageonmap.commands.Commands;
+import fr.moribus.imageonmap.commands.bukkit.BanHashCommand;
+import fr.moribus.imageonmap.commands.bukkit.UnbanHashCommand;
 import fr.moribus.imageonmap.commands.maptool.DeleteCommand;
 import fr.moribus.imageonmap.commands.maptool.ExploreCommand;
 import fr.moribus.imageonmap.commands.maptool.GetCommand;
@@ -79,7 +82,7 @@ public final class ImageOnMap extends JavaPlugin {
 
 	private FileConfiguration BannedHashesyml;
 	private File BannedHashesFile;
-	public List<String> BannedHashes;
+	public HashMap<String, BanReason> BannedHashes = new HashMap<String, BanReason>();
 	private final Path mapsDirectory;
 	private final Path imagesDirectory;
 
@@ -149,7 +152,13 @@ public final class ImageOnMap extends JavaPlugin {
 		BannedHashesyml = YamlConfiguration.loadConfiguration(BannedHashesFile);
 
 		// Load the string list from the data configuration
-		BannedHashes = BannedHashesyml.getStringList("BannedHashes");
+		// BannedHashes = BannedHashesyml.getStringList("BannedHashes");
+		((ConfigurationSection) BannedHashesyml.getConfigurationSection("BannedHashes")).getKeys(false)
+				.forEach((Hash) -> {
+					BannedHashes.put(Hash, new BanReason(BannedHashesyml.getString("BannedHashes." + Hash + ".reason"),
+							BannedHashesyml.getString("BannedHashes." + Hash + ".duration")));
+
+				});
 
 		// ####################################
 
@@ -186,12 +195,13 @@ public final class ImageOnMap extends JavaPlugin {
 		// Save the string list to the data configuration
 		BannedHashesyml.set("BannedHashes", BannedHashes);
 
-		// Save the data configuration to the data file
-		try {
-			BannedHashesyml.save(BannedHashesFile);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		// Save the string list to the data configuration
+		// BannedHashesyml.set("BannedHashes", BannedHashes);
+		BannedHashes.keySet().forEach((Hash) -> {
+			BannedHashesyml.set("BannedHashes." + Hash, (Object) null); // ???
+			BannedHashesyml.set("BannedHashes." + Hash + ".reason", BannedHashes.get(Hash).REASON);
+			BannedHashesyml.set("BannedHashes." + Hash + ".duration", BannedHashes.get(Hash).TIMESTR);
+		});
 		// ####################################
 
 		Gui.clearOpenGuis();

@@ -30,107 +30,106 @@
 
 package fr.zcraft.quartzlib.tools.text;
 
-import fr.moribus.imageonmap.ImageOnMap;
-import net.kyori.adventure.text.Component;
-
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
 
+import fr.moribus.imageonmap.ImageOnMap;
+import net.kyori.adventure.text.Component;
 
 /**
  * An utility class to send action bar messages to the players.
  */
 public final class ActionBar {
-    private static final Map<UUID, String> actionMessages = new ConcurrentHashMap<>();
+	private static final Map<UUID, String> actionMessages = new ConcurrentHashMap<>();
 
-    private static Runnable actionMessagesUpdater = null;
-    private static BukkitTask actionMessagesUpdaterTask = null;
+	private static Runnable actionMessagesUpdater = null;
+	private static BukkitTask actionMessagesUpdaterTask = null;
 
+	private ActionBar() {
+	}
 
-    private ActionBar() {
-    }
+	/**
+	 * Sends a constant message to the given player.
+	 *
+	 * @param player  The player.
+	 * @param message The message to display.
+	 */
+	public static void sendPermanentMessage(Player player, String message) {
+		actionMessages.put(player.getUniqueId(), message);
+		player.sendActionBar(Component.text(message));
 
+		checkActionMessageUpdaterRunningState();
+	}
 
-    /**
-     * Sends a constant message to the given player.
-     *
-     * @param player  The player.
-     * @param message The message to display.
-     */
-    public static void sendPermanentMessage(Player player, String message) {
-        actionMessages.put(player.getUniqueId(), message);
-        player.sendActionBar(Component.text(message));
+	/**
+	 * Removes the action bar message displayed to the given player.
+	 *
+	 * @param player  The player.
+	 * @param instant If {@code true}, the message will be removed instantly. Else,
+	 *                it will dismiss progressively. Please note that in that case,
+	 *                the message may be displayed a few more seconds.
+	 */
+	public static void removeMessage(Player player, boolean instant) {
+		actionMessages.remove(player.getUniqueId());
 
-        checkActionMessageUpdaterRunningState();
-    }
+		if (instant) {
+			player.sendActionBar(Component.empty());
+		}
 
-    /**
-     * Removes the action bar message displayed to the given player.
-     *
-     * @param player  The player.
-     * @param instant If {@code true}, the message will be removed instantly. Else, it will dismiss
-     *                progressively. Please note that in that case, the message may be displayed a
-     *                few more seconds.
-     */
-    public static void removeMessage(Player player, boolean instant) {
-        actionMessages.remove(player.getUniqueId());
+		checkActionMessageUpdaterRunningState();
+	}
 
-        if (instant) {
-            player.sendActionBar(Component.empty());
-        }
+	/**
+	 * Removes the action bar message displayed to the given player.
+	 *
+	 * @param player The player.
+	 */
+	public static void removeMessage(Player player) {
+		removeMessage(player, false);
+	}
 
-        checkActionMessageUpdaterRunningState();
-    }
+	/**
+	 * Initializes the ActionBar API.
+	 * <p>
+	 * Initializes the {@link Runnable} that will re-send the permanent action
+	 * messages to the players.
+	 * </p>
+	 */
+	public static void initActionMessageUpdaterTask() {
+		if (actionMessagesUpdater != null) {
+			return;
+		}
 
-    /**
-     * Removes the action bar message displayed to the given player.
-     *
-     * @param player The player.
-     */
-    public static void removeMessage(Player player) {
-        removeMessage(player, false);
-    }
+		actionMessagesUpdater = () -> {
+			for (Map.Entry<UUID, String> entry : actionMessages.entrySet()) {
+				Player player = Bukkit.getPlayer(entry.getKey());
+				if (player != null && player.isOnline()) {
+					player.sendActionBar(Component.text(entry.getValue()));
+				}
+			}
+		};
+	}
 
+	/**
+	 * Checks if the task sending the permanent actions message needs to run and is
+	 * not running, or is useless and running. Stops or launches the task if needed.
+	 */
+	private static void checkActionMessageUpdaterRunningState() {
+		initActionMessageUpdaterTask();
 
-    /**
-     * Initializes the ActionBar API.
-     * <p>Initializes the {@link Runnable} that will re-send the permanent action messages to the
-     * players.</p>
-     */
-    public static void initActionMessageUpdaterTask() {
-        if (actionMessagesUpdater != null) {
-            return;
-        }
+		int messagesCount = actionMessages.size();
 
-        actionMessagesUpdater = () -> {
-            for (Map.Entry<UUID, String> entry : actionMessages.entrySet()) {
-                Player player = Bukkit.getPlayer(entry.getKey());
-                if (player != null && player.isOnline()) {
-                    player.sendActionBar(Component.text(entry.getValue()));
-                }
-            }
-        };
-    }
-
-    /**
-     * Checks if the task sending the permanent actions message needs to run and is not running, or
-     * is useless and running. Stops or launches the task if needed.
-     */
-    private static void checkActionMessageUpdaterRunningState() {
-        initActionMessageUpdaterTask();
-
-        int messagesCount = actionMessages.size();
-
-        if (messagesCount == 0 && actionMessagesUpdaterTask != null) {
-            actionMessagesUpdaterTask.cancel();
-            actionMessagesUpdaterTask = null;
-        } else if (messagesCount > 0 && actionMessagesUpdaterTask == null) {
-            actionMessagesUpdaterTask =
-                    Bukkit.getScheduler().runTaskTimer(ImageOnMap.getPlugin(), actionMessagesUpdater, 20, 30);
-        }
-    }
+		if (messagesCount == 0 && actionMessagesUpdaterTask != null) {
+			actionMessagesUpdaterTask.cancel();
+			actionMessagesUpdaterTask = null;
+		} else if (messagesCount > 0 && actionMessagesUpdaterTask == null) {
+			actionMessagesUpdaterTask = Bukkit.getScheduler().runTaskTimer(ImageOnMap.getPlugin(),
+					actionMessagesUpdater, 20, 30);
+		}
+	}
 }

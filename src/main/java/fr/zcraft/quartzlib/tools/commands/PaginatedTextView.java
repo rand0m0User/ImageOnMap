@@ -32,15 +32,15 @@
 
 package fr.zcraft.quartzlib.tools.commands;
 
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
+
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
-import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
-
 
 /**
  * An utility to send paginated chat views to players, mainly for commands.
@@ -48,174 +48,174 @@ import org.bukkit.entity.Player;
  * @param <T> Data type to display.
  */
 public abstract class PaginatedTextView<T> {
-    public static final int DEFAULT_LINES_IN_NON_EXPANDED_CHAT_VIEW = 10;
+	public static final int DEFAULT_LINES_IN_NON_EXPANDED_CHAT_VIEW = 10;
 
-    // items minus one header line minus pagination links
-    private final int itemsPerPage = DEFAULT_LINES_IN_NON_EXPANDED_CHAT_VIEW - 2;
-    private final boolean doNotPaginateForConsole = true;
+	// items minus one header line minus pagination links
+	private final int itemsPerPage = DEFAULT_LINES_IN_NON_EXPANDED_CHAT_VIEW - 2;
+	private final boolean doNotPaginateForConsole = true;
 
-    private T[] data;
-    private int currentPage;
-    private int pagesCount;
+	private T[] data;
+	private int currentPage;
+	private int pagesCount;
 
-    /* ========== User configuration ========== */
+	/* ========== User configuration ========== */
 
+	/**
+	 * Sets the data to display.
+	 *
+	 * @param data The data.
+	 * @return Instance for chaining.
+	 */
+	public PaginatedTextView<T> setData(final T[] data) {
+		this.data = data;
+		recalculatePagination();
 
-    /**
-     * Sets the data to display.
-     *
-     * @param data The data.
-     * @return Instance for chaining.
-     */
-    public PaginatedTextView<T> setData(final T[] data) {
-        this.data = data;
-        recalculatePagination();
+		return this;
+	}
 
-        return this;
-    }
+	/**
+	 * Sets the current page to be displayed.
+	 *
+	 * @param page The page.
+	 * @return Instance for chaining.
+	 */
+	public PaginatedTextView<T> setCurrentPage(final int page) {
+		if (page < 1) {
+			currentPage = 1;
+		} else {
+			currentPage = Math.min(page, pagesCount);
+		}
 
-    /**
-     * Sets the current page to be displayed.
-     *
-     * @param page The page.
-     * @return Instance for chaining.
-     */
-    public PaginatedTextView<T> setCurrentPage(final int page) {
-        if (page < 1) {
-            currentPage = 1;
-        } else {
-            currentPage = Math.min(page, pagesCount);
-        }
+		return this;
+	}
 
-        return this;
-    }
+	/**
+	 * Displays the paginated view page, as configured.
+	 *
+	 * @param receiver The receiver of the text view.
+	 */
+	public void display(CommandSender receiver) {
+		int from;
+		int to;
 
-    /**
-     * Displays the paginated view page, as configured.
-     *
-     * @param receiver The receiver of the text view.
-     */
-    public void display(CommandSender receiver) {
-        int from;
-        int to;
+		if (!doNotPaginateForConsole || receiver instanceof Player) {
+			from = ((currentPage - 1) * itemsPerPage);
+			to = Math.min(from + itemsPerPage, data.length);
+		} else {
+			from = 0;
+			to = data.length;
+		}
 
-        if (!doNotPaginateForConsole || receiver instanceof Player) {
-            from = ((currentPage - 1) * itemsPerPage);
-            to = Math.min(from + itemsPerPage, data.length);
-        } else {
-            from = 0;
-            to = data.length;
-        }
+		displayHeader(receiver);
 
-        displayHeader(receiver);
+		for (int i = from; i < to; i++) {
+			displayItem(receiver, data[i]);
+		}
 
-        for (int i = from; i < to; i++) {
-            displayItem(receiver, data[i]);
-        }
+		displayFooter(receiver);
+	}
 
-        displayFooter(receiver);
-    }
+	/* ========== Overrider & internal utilities ========== */
 
+	/**
+	 * Gets the data.
+	 *
+	 * @return The data, for use in the overridden methods.
+	 */
+	protected T[] data() {
+		return data;
+	}
 
+	/**
+	 * Recalculates the page count based on the data length and the items per page.
+	 */
+	private void recalculatePagination() {
+		pagesCount = (int) Math.ceil(((double) data.length) / ((double) itemsPerPage));
+	}
 
-    /* ========== Overrider & internal utilities ========== */
+	/* ========== Methods to override ========== */
 
+	/**
+	 * Displays a header.
+	 *
+	 * <p>
+	 * If this method is not overridden, no header will be displayed.
+	 * </p>
+	 *
+	 * @param receiver The receiver of the paginated view.
+	 */
+	protected void displayHeader(CommandSender receiver) {
+	}
 
-    /**
-     * Gets the data.
-     *
-     * @return The data, for use in the overridden methods.
-     */
-    protected T[] data() {
-        return data;
-    }
+	/**
+	 * Displays an item.
+	 * <p>
+	 * This method will be called for each displayed item.
+	 * </p>
+	 *
+	 * @param receiver The receiver of the paginated view.
+	 * @param item     The item to be displayed.
+	 */
+	protected abstract void displayItem(CommandSender receiver, T item);
 
-    /**
-     * Recalculates the page count based on the data length and the items per page.
-     */
-    private void recalculatePagination() {
-        pagesCount = (int) Math.ceil(((double) data.length) / ((double) itemsPerPage));
-    }
+	/**
+	 * Displays a footer.
+	 *
+	 * <p>
+	 * If this method is not overridden, the default implementation will print
+	 * pagination links: a “previous” link, if we're not in the first page, the
+	 * current page, and a “next” link if we're not on the last page.
+	 * </p>
+	 *
+	 * @param receiver The receiver of the paginated view.
+	 * @see #getCommandToPage(int) Method to override to fully use the default
+	 *      footer.
+	 */
+	protected void displayFooter(CommandSender receiver) {
+		if (pagesCount <= 1 || (doNotPaginateForConsole && !(receiver instanceof Player))) {
+			return;
+		}
 
+		TextComponent.Builder footer = Component.text();
 
+		// RawTextPart<?> footer = new RawText("");
 
-    /* ========== Methods to override ========== */
+		if (currentPage > 1) {
+			String command = getCommandToPage(currentPage - 1);
+			if (command != null) {
+				footer.append(Component.text("« Previous")).clickEvent(ClickEvent.runCommand(command))
+						.hoverEvent(HoverEvent.showText(Component.text("Go to page " + (currentPage - 1))))
+						.append(Component.text(" ⋅ ")).color(NamedTextColor.GRAY);
+			}
+		}
 
+		footer.append(Component.text("Page " + currentPage + " of " + pagesCount)).color(NamedTextColor.GRAY)
+				.decorate(TextDecoration.BOLD);
 
-    /**
-     * Displays a header.
-     *
-     * <p>If this method is not overridden, no header will be displayed.</p>
-     *
-     * @param receiver The receiver of the paginated view.
-     */
-    protected void displayHeader(CommandSender receiver) {
-    }
+		if (currentPage < pagesCount) {
+			String command = getCommandToPage(currentPage + 1);
+			if (command != null) {
+				footer.append(Component.text(" ⋅ ")).append(Component.text("Next »")).color(NamedTextColor.GRAY)
+						.clickEvent(ClickEvent.runCommand(command))
+						.hoverEvent(HoverEvent.showText(Component.text("Go to page " + (currentPage + 1))));
+			}
+		}
 
-    /**
-     * Displays an item.
-     * <p>This method will be called for each displayed item.</p>
-     *
-     * @param receiver The receiver of the paginated view.
-     * @param item     The item to be displayed.
-     */
-    protected abstract void displayItem(CommandSender receiver, T item);
+		receiver.sendMessage(footer.build());
+	}
 
-    /**
-     * Displays a footer.
-     *
-     * <p>If this method is not overridden, the default implementation will print pagination links: a “previous” link,
-     * if we're not in the first page, the current page, and a “next” link if we're not on the last page.</p>
-     *
-     * @param receiver The receiver of the paginated view.
-     * @see #getCommandToPage(int) Method to override to fully use the default footer.
-     */
-    protected void displayFooter(CommandSender receiver) {
-        if (pagesCount <= 1 || (doNotPaginateForConsole && !(receiver instanceof Player))) {
-            return;
-        }
-
-        TextComponent.Builder footer = Component.text();
-
-        //RawTextPart<?> footer = new RawText("");
-
-        if (currentPage > 1) {
-            String command = getCommandToPage(currentPage - 1);
-            if (command != null) {
-                footer.append(Component.text("« Previous"))
-                        .clickEvent(ClickEvent.runCommand(command))
-                        .hoverEvent(HoverEvent.showText(Component.text("Go to page " + (currentPage - 1))))
-                        .append(Component.text(" ⋅ "))
-                        .color(NamedTextColor.GRAY);
-            }
-        }
-
-        footer.append(Component.text("Page " + currentPage + " of " + pagesCount))
-                .color(NamedTextColor.GRAY).decorate(TextDecoration.BOLD);
-
-        if (currentPage < pagesCount) {
-            String command = getCommandToPage(currentPage + 1);
-            if (command != null) {
-                footer.append(Component.text(" ⋅ "))
-                        .append(Component.text("Next »"))
-                        .color(NamedTextColor.GRAY)
-                        .clickEvent(ClickEvent.runCommand(command))
-                        .hoverEvent(HoverEvent.showText(Component.text("Go to page " + (currentPage + 1))));
-            }
-        }
-
-        receiver.sendMessage(footer.build());
-    }
-
-    /**
-     * Returns the command to be executed by the player to access the nth page, or {@code null} if not applicable.
-     * <p>If you use the default footer, you should override this method. If this returns {@code null},
-     * links to previous and next pages will not be displayed.</p>
-     *
-     * @param page The page.
-     * @return The command to be executed to display the page.
-     */
-    protected String getCommandToPage(int page) {
-        return null;
-    }
+	/**
+	 * Returns the command to be executed by the player to access the nth page, or
+	 * {@code null} if not applicable.
+	 * <p>
+	 * If you use the default footer, you should override this method. If this
+	 * returns {@code null}, links to previous and next pages will not be displayed.
+	 * </p>
+	 *
+	 * @param page The page.
+	 * @return The command to be executed to display the page.
+	 */
+	protected String getCommandToPage(int page) {
+		return null;
+	}
 }

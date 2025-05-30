@@ -5,7 +5,9 @@
 # Available: en-US (default, fallback), fr-FR, ru-RU, de-DE, zh-CN, ja-JP, es-ES.
 lang: en-US
 
-PDQBAN: "You have been permanently banned from mc.soyjak.party for the following reason:\n\n1 - You will not post, link to, or request illegal content.\n\nYour ban was filed on %TIME% and will NOT expire.\n\nAccording to our server, your IP is: %IP%. The name you were posting with \nwas %NAME%.\n\n"
+PERMPDQBAN: "You have been permanently banned from mc.soyjak.party for the following reason:\n\n%REASON%\n\nYour ban was filed on %TIME% and will NOT expire.\n\nAccording to our server, your IP is: %IP%. The name you were posting with \nwas %NAME%.\n\n"
+
+PDQBAN: "You have been banned from mc.soyjak.party for the following reason:\n\n%REASON%\n\nYour ban was filed on %TIME% and expires on %EXPIRES% from now.\n\nAccording to our server, your IP is: %IP%. The name you were posting with \nwas %NAME%."
 
 # Allows collection of anonymous statistics on plugin environment and usage
 # The statistics are publicly visible here: http://mcstats.org/plugin/ImageOnMap

@@ -36,6 +36,7 @@
 
 package fr.moribus.imageonmap.commands.bukkit;
 
+import java.util.Base64;
 import java.util.regex.Pattern;
 
 import org.bukkit.command.Command;
@@ -43,9 +44,9 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
 
+import fr.moribus.imageonmap.AutoMod;
+import fr.moribus.imageonmap.ColorChat;
 import fr.moribus.imageonmap.ImageOnMap;
-import fr.moribus.imageonmap.commands.IoMCommand;
-import fr.moribus.imageonmap.i18n.I;
 
 public class UnbanHashCommand implements CommandExecutor {
 
@@ -53,26 +54,48 @@ public class UnbanHashCommand implements CommandExecutor {
 	public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label,
 			@NotNull String[] args) {
 		if (!sender.isOp()) {
-			IoMCommand.warning(sender, I.t("You do not have permission to run this command."));
+			sender.sendMessage("You do not have permission to run this command.");
 			return false;
 		}
-		String warningMsg;
 		if (args.length > 1) {
-			warningMsg = "Too many parameters!" + " Usage: /unbanhash [hash]";
-			IoMCommand.warning(sender, I.t(warningMsg));
+			ColorChat.msg(sender, "Too many parameters! Usage: /unbanhash [hash]");
 			return false;
 		}
 		String hash = args[0];
-		if (!Pattern.compile("^[0-9A-Fa-f]{64}+$").matcher(hash).matches()) {
-			IoMCommand.warning(sender, I.t("This Hash seems to be incomplete, emprty or not a hash at all!"));
+		// handle the input of a base64 hash from thread.json
+		if (Pattern.compile(AutoMod.B64_HASH_PDQ_REGEX).matcher(hash).matches()) {
+			try {
+				StringBuilder hexString = new StringBuilder();
+				for (byte b : Base64.getDecoder().decode(hash)) {
+					String hex = Integer.toHexString(0xff & b); // Ensure positive value for hex representation
+					if (hex.length() == 1) {
+						hexString.append('0'); // Pad single-digit hex values with a leading zero
+					}
+					hexString.append(hex);
+				}
+				hash = hexString.toString();
+				if (!Pattern.compile(AutoMod.HASH_PDQ_REGEX).matcher(hash).matches()) {
+					ColorChat.msg(sender, "&r&cThis Hash seems to be incomplete, emprty or not a hash at all!");
+					return false;
+				}
+			} catch (IllegalArgumentException e) {
+				// Handle invalid Base64 input (e.g., characters not in the Base64 alphabet)
+				ColorChat.msg(sender, "&r&cThis &r&&6base-64 encoded&r&c hash seems to be malformed!");
+				return false;
+			}
+		}
+
+		// standard HEX hash
+		if (!Pattern.compile(AutoMod.HASH_PDQ_REGEX).matcher(hash).matches()) {
+			ColorChat.msg(sender, "&cThis Hash seems to be incomplete, emprty or not a hash at all!");
 			return false;
 		}
-		if (ImageOnMap.getPlugin().BannedHashes.contains(hash)) {
+		if (ImageOnMap.getPlugin().BannedHashes.keySet().contains(hash)) {
 			ImageOnMap.getPlugin().BannedHashes.remove(hash);
-			IoMCommand.info(sender, I.t("Unbanned the hash: " + hash));
+			ColorChat.msg(sender, "&r&2Unbanned the hash: " + hash);
 			return true;
 		} else {
-			IoMCommand.warning(sender, I.t("This Hash is not banned."));
+			ColorChat.msg(sender, "&cThis Hash is not banned.");
 			return true;
 		}
 	}

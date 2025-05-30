@@ -30,36 +30,36 @@
 
 package fr.zcraft.quartzlib.tools.runners;
 
-import fr.moribus.imageonmap.ImageOnMap;
 import org.bukkit.Bukkit;
 import org.bukkit.scheduler.BukkitScheduler;
 
+import fr.moribus.imageonmap.ImageOnMap;
 
 /**
  * This utility class shortens the code used to execute tasks.
  */
 public final class RunTask {
-    private static final BukkitScheduler scheduler = Bukkit.getScheduler();
+	private static final BukkitScheduler scheduler = Bukkit.getScheduler();
 
-    private RunTask() {
-    }
+	private RunTask() {
+	}
 
-    /**
-     * Returns a task that will run on the next server tick.
-     *
-     * @param runnable The task to be run.
-     */
-    public static void nextTick(Runnable runnable) {
-        scheduler.runTask(ImageOnMap.getPlugin(), runnable);
-    }
+	/**
+	 * Returns a task that will run on the next server tick.
+	 *
+	 * @param runnable The task to be run.
+	 */
+	public static void nextTick(Runnable runnable) {
+		scheduler.runTask(ImageOnMap.getPlugin(), runnable);
+	}
 
-    /**
-     * Returns a task that will run after the specified number of server ticks.
-     *
-     * @param runnable The task to be run.
-     * @param delay    The ticks to wait before running the task.
-     */
-    public static void later(Runnable runnable, long delay) {
-        scheduler.runTaskLater(ImageOnMap.getPlugin(), runnable, delay);
-    }
+	/**
+	 * Returns a task that will run after the specified number of server ticks.
+	 *
+	 * @param runnable The task to be run.
+	 * @param delay    The ticks to wait before running the task.
+	 */
+	public static void later(Runnable runnable, long delay) {
+		scheduler.runTaskLater(ImageOnMap.getPlugin(), runnable, delay);
+	}
 }

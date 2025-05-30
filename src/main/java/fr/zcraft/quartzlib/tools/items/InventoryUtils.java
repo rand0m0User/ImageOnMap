@@ -38,24 +38,24 @@ import org.bukkit.inventory.Inventory;
  * This class provides various utilities for inventory management.
  */
 public abstract class InventoryUtils {
-    private InventoryUtils() {
-    }
+	private InventoryUtils() {
+	}
 
-    /**
-     * Checks if these inventories are equal.
-     *
-     * @param inventory1 The first inventory.
-     * @param inventory2 The other inventory.
-     * @return {@code true} if the two inventories are the same one.
-     */
-    public static boolean sameInventories(Inventory inventory1, Inventory inventory2) {
-        if (inventory1 == inventory2) {
-            return true;
-        } else if (inventory1 == null || inventory2 == null) {
-            return false;
-        }
+	/**
+	 * Checks if these inventories are equal.
+	 *
+	 * @param inventory1 The first inventory.
+	 * @param inventory2 The other inventory.
+	 * @return {@code true} if the two inventories are the same one.
+	 */
+	public static boolean sameInventories(Inventory inventory1, Inventory inventory2) {
+		if (inventory1 == inventory2) {
+			return true;
+		} else if (inventory1 == null || inventory2 == null) {
+			return false;
+		}
 
-        return inventory1.getType() == inventory2.getType()
-                && Arrays.equals(inventory1.getContents(), inventory2.getContents());
-    }
+		return inventory1.getType() == inventory2.getType()
+				&& Arrays.equals(inventory1.getContents(), inventory2.getContents());
+	}
 }
