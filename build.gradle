@@ -1,11 +1,11 @@
 plugins {
     id 'java'
-    id 'io.papermc.paperweight.userdev' version '1.5.7-SNAPSHOT'
+    id 'io.papermc.paperweight.userdev' version '1.5.10'
     id 'xyz.jpenilla.run-paper' version '2.1.0'
 }
 
 group 'fr.moribus'
-version '5.1.1'
+version '5.1.2'
 
 repositories {
     mavenCentral()
@@ -17,6 +17,12 @@ repositories {
 dependencies {
     // paper userdev
     paperweightDevelopmentBundle("io.papermc.paper:dev-bundle:1.20.1-R0.1-SNAPSHOT")
+}
+
+compileJava.options.encoding = 'UTF-8'
+
+tasks.withType(JavaCompile) {
+options.encoding = 'UTF-8'
 }
 
 java {
@@ -34,6 +40,6 @@ tasks {
     }
 
     runServer {
-        minecraftVersion("1.20.0")
+        minecraftVersion("1.20.1")
     }
 }
