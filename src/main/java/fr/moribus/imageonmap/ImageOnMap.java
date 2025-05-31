@@ -60,6 +60,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import fr.moribus.imageonmap.commands.Commands;
 import fr.moribus.imageonmap.commands.bukkit.BanHashCommand;
+import fr.moribus.imageonmap.commands.bukkit.BanYourselfWithHashCommand;
 import fr.moribus.imageonmap.commands.bukkit.UnbanHashCommand;
 import fr.moribus.imageonmap.commands.maptool.DeleteCommand;
 import fr.moribus.imageonmap.commands.maptool.ExploreCommand;
@@ -181,6 +182,7 @@ public final class ImageOnMap extends JavaPlugin {
 
 		initCommand("banhash", new BanHashCommand(), null);
 		initCommand("unbanhash", new UnbanHashCommand(), null);
+		initCommand("BanYourselfWithHash", new BanYourselfWithHashCommand(), null);
 
 	}
 

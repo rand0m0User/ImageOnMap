@@ -6,11 +6,14 @@ api-version: "1.13"
 
 commands:
   banhash:
-    usage: /banhash <256 bit PDQ hash>
+    usage: /banhash <256 bit PDQ hash OR base64 encoded PDQ hash>
     description: Ban a PDQ hash of an image.
   unbanhash:
-    usage: /unbanhash <256 bit PDQ hash>
+    usage: /unbanhash <256 bit PDQ hash OR base64 encoded PDQ hash>
     description: Unban a PDQ hash of an image.
+#  BanYourselfWithHash:
+#    usage: /BanYourselfWithHash <256 bit PDQ hash>
+#    description: WARNING! DEBUG DO NOT USE!
   tomap:
     description: render an image in a map
     usage: /<command> [URL]

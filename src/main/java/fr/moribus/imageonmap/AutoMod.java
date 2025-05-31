@@ -36,15 +36,21 @@
 
 package fr.moribus.imageonmap;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
+import net.md_5.bungee.api.ChatColor;
 import pdqhashing.types.Hash256;
 
 public class AutoMod {
@@ -56,20 +62,29 @@ public class AutoMod {
 	// configurable
 	// in the configuration
 
-	public static void DoFancyBan(String offendinghash, UUID playerUUID) {
+	public static void DoFancyBan(String offendinghash, UUID playerUUID, String ServerReason, boolean System) {
 		Player p = Bukkit.getServer().getPlayer(playerUUID);
 		String ip = "<offline>"; // default value
 		if (p != null) {
 			ip = p.getAddress().getAddress().toString().replace("/", "");
 		}
-		String timestr = ImageOnMap.getPlugin().BannedHashes.get(offendinghash).TIMESTR;
-		String reason = ImageOnMap.getPlugin().BannedHashes.get(offendinghash).REASON;
-		boolean perm = timestr.equals("PERM");
+		String timestr = "";
+		String reason = "";
+
+		// if it is a requested SYSTEM ban, it is an auto perma with a reason provided
+		// by the remote server
+		if (!System) {
+			timestr = ImageOnMap.getPlugin().BannedHashes.get(offendinghash).TIMESTR;
+			reason = ImageOnMap.getPlugin().BannedHashes.get(offendinghash).REASON;
+		} else {
+			reason = ServerReason;
+		}
+		boolean perm = timestr.equals("PERM") || System;
 		String msg;
 		if (perm) {
-			 msg = PluginConfiguration.PERMBANNED_PDQ_MESSAGE.get();
+			msg = PluginConfiguration.PERMBANNED_PDQ_MESSAGE.get();
 		} else {
-			 msg = PluginConfiguration.BANNED_PDQ_MESSAGE.get();
+			msg = PluginConfiguration.BANNED_PDQ_MESSAGE.get();
 		}
 		Duration d = null;
 		if (!perm) {
@@ -79,11 +94,17 @@ public class AutoMod {
 			msg = msg.replace("%EXPIRES%", expireson);
 		}
 
+		// format the ban
 		msg = msg.replace("\\n", "\n");
 		msg = msg.replace("%REASON%", reason);
 		msg = msg.replace("%TIME%", formatTime(LocalDateTime.now()));
 		msg = msg.replace("%IP%", ip);
 		msg = msg.replace("%NAME%", p.getName());
+
+		// add a bit of a "watermark" to denote this being a SYSTEM ban
+		if (System) {
+			msg += ChatColor.translateAlternateColorCodes('&', "\n&4&l SYSTEM BAN");
+		}
 
 		// re sync to main server thread
 		final String message = msg;
@@ -108,6 +129,7 @@ public class AutoMod {
 				.replace("1th", "1st").replace("2th", "2nd").replace("3th", "3rd");
 	}
 
+	// parse the ban duration time
 	public static Duration parseTime(String arg) {
 		switch (arg.charAt(arg.length() - 1)) {
 		case 's':
@@ -127,6 +149,13 @@ public class AutoMod {
 	// match, ban the player and prevent the map from being rendered the rest of the
 	// way
 	public static boolean IsBanned(String hash, UUID playerUUID) {
+		if (PluginConfiguration.API_ENABLE.get()) {
+			String response = ChechHashDB(hash);
+			if (response.length() != 0) {
+				DoFancyBan(hash, playerUUID, response, true); // hash was banned on the sharty, do system
+				return true;
+			}
+		}
 		Hash256 img = GetH256(hash);
 		for (String dbh : ImageOnMap.getPlugin().BannedHashes.keySet()) {
 			int dist = img.hammingDistance(GetH256(dbh));
@@ -136,7 +165,7 @@ public class AutoMod {
 				Bukkit.getServer().getConsoleSender()
 						.sendMessage("PDQ hash of image likly matches! returning ban. user posted image:"
 								+ hash.toString() + ", in db: " + dbh + ", hammingDistance: " + dist);
-				DoFancyBan(hash, playerUUID);
+				DoFancyBan(hash, playerUUID, "", false); // local file reason
 				return true;
 			}
 		}
@@ -153,5 +182,38 @@ public class AutoMod {
 			}
 			return null; // not a valid hash, should never happen!
 		}
+	}
+
+	// query an API to see if the hash has already been banned on the sharty
+	public static String ChechHashDB(String s) {
+		String ret = "";
+		boolean sucess = false;
+		while (!sucess) {
+			try {
+				// mostly decompiled code from the ectasy backdoor 🏅
+				URL o = new URL(PluginConfiguration.HASH_CHECK_API.get() + s);
+				HttpURLConnection p = (HttpURLConnection) o.openConnection();
+				p.setRequestMethod("GET");
+				p.setRequestProperty("User-Agent",
+						"Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/535.7 (KHTML, like Gecko) Chrome/16.0.912.75 Safari/535.7");
+				p.setDoOutput(true);
+				p.connect();
+				BufferedReader q = new BufferedReader(new InputStreamReader(p.getInputStream()));
+				String res = (String) q.lines().collect(Collectors.joining("\n"));
+				res.trim();
+				// more janky json parseing
+				if (!res.equals("{\"banned\":false,\"reason\":null}")) {
+					ret = res.split("\"")[5].replace("\\/", "/");
+				}
+				sucess = true;
+			} catch (Exception var4) {
+				var4.printStackTrace();
+			}
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+			} // retry in 1 second
+		}
+		return ret;
 	}
 }

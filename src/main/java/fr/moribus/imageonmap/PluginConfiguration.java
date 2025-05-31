@@ -50,6 +50,18 @@ public final class PluginConfiguration {
 	public static final Supplier<Locale> LANG = () -> I18n
 			.localeFromString(PLUGIN.getConfig().getString("lang", "en-US"));
 
+	public static final Supplier<Boolean> API_ENABLE = () -> PLUGIN.getConfig().getBoolean("ENABLE_API");
+
+	public static final Supplier<String> HASH_CHECK_API = () -> {
+		FileConfiguration config = PLUGIN.getConfig();
+		if (config.isString("API")) {
+			return config.getString("API");
+		} else {
+			config.set("API", "default");
+		}
+		return "config error";
+	};
+
 	public static final Supplier<String> BANNED_PDQ_MESSAGE = () -> {
 		FileConfiguration config = PLUGIN.getConfig();
 		if (config.isString("PDQBAN")) {

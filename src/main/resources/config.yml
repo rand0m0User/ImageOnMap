@@ -5,6 +5,16 @@
 # Available: en-US (default, fallback), fr-FR, ru-RU, de-DE, zh-CN, ja-JP, es-ES.
 lang: en-US
 
+#if true, in addition to checking the local 'BannedImageHashes' file, 
+#the plugin will also ping the user's image hash off to the API to be checked with the remote database
+#if false, the plugin will only check the local 'BannedImageHashes' file.
+ENABLE_API: false
+
+#API used for checking hashes, must support HEX hashes, 
+#return "{"banned":false,"reason":null}" when a hash is not banned, 
+#and "{"banned":true,"reason":"reason string"}" when banned
+API: ""
+
 PERMPDQBAN: "You have been permanently banned from mc.soyjak.party for the following reason:\n\n%REASON%\n\nYour ban was filed on %TIME% and will NOT expire.\n\nAccording to our server, your IP is: %IP%. The name you were posting with \nwas %NAME%.\n\n"
 
 PDQBAN: "You have been banned from mc.soyjak.party for the following reason:\n\n%REASON%\n\nYour ban was filed on %TIME% and expires on %EXPIRES% from now.\n\nAccording to our server, your IP is: %IP%. The name you were posting with \nwas %NAME%."

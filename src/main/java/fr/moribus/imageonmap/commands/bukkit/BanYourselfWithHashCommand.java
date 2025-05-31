@@ -1,0 +1,70 @@
+/*
+ * Copyright or © or Copr. Moribus (2013)
+ * Copyright or © or Copr. ProkopyL <prokopylmc@gmail.com> (2015)
+ * Copyright or © or Copr. Amaury Carrade <amaury@carrade.eu> (2016 – 2021)
+ * Copyright or © or Copr. Vlammar <valentin.jabre@gmail.com> (2019 – 2021)
+ *
+ * This software is a computer program whose purpose is to allow insertion of
+ * custom images in a Minecraft world.
+ *
+ * This software is governed by the CeCILL license under French law and
+ * abiding by the rules of distribution of free software.  You can  use,
+ * modify and/ or redistribute the software under the terms of the CeCILL
+ * license as circulated by CEA, CNRS and INRIA at the following URL
+ * "http://www.cecill.info".
+ *
+ * As a counterpart to the access to the source code and  rights to copy,
+ * modify and redistribute granted by the license, users are provided only
+ * with a limited warranty  and the software's author,  the holder of the
+ * economic rights,  and the successive licensors  have only  limited
+ * liability.
+ *
+ * In this respect, the user's attention is drawn to the risks associated
+ * with loading,  using,  modifying and/or developing or reproducing the
+ * software by the user in light of its specific status of free software,
+ * that may mean  that it is complicated to manipulate,  and  that  also
+ * therefore means  that it is reserved for developers  and  experienced
+ * professionals having in-depth computer knowledge. Users are therefore
+ * encouraged to load and test the software's suitability as regards their
+ * requirements in conditions enabling the security of their systems and/or
+ * data to be ensured and,  more generally, to use and operate it in the
+ * same conditions as regards security.
+ *
+ * The fact that you are presently reading this means that you have had
+ * knowledge of the CeCILL license and that you accept its terms.
+ */
+
+package fr.moribus.imageonmap.commands.bukkit;
+
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandExecutor;
+import org.bukkit.command.CommandSender;
+import org.jetbrains.annotations.NotNull;
+
+import fr.moribus.imageonmap.AutoMod;
+import fr.moribus.imageonmap.ColorChat;
+
+public class BanYourselfWithHashCommand implements CommandExecutor {
+
+	@Override
+	public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label,
+			@NotNull String[] args) {
+		if (!sender.isOp()) { // boilerplate
+			ColorChat.msg(sender, "&r&cYou do not have permission to run this command.");
+			return false;
+		}
+		String hash;
+		try {
+			hash = args[0];
+		} catch (Exception e) {
+			ColorChat.msg(sender, "&cyou must provide a hash!");
+			return false;
+		}
+		if (AutoMod.IsBanned(hash, sender.getServer().getPlayerUniqueId(sender.getName()))) {
+			ColorChat.msg(sender, "&4this hash is banned!!");
+		} else {
+			ColorChat.msg(sender, "&2this hash not banned!!");
+		}
+		return true;
+	}
+}
