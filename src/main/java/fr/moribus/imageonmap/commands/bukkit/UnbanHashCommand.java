@@ -74,17 +74,12 @@ public class UnbanHashCommand implements CommandExecutor {
 					hexString.append(hex);
 				}
 				hash = hexString.toString();
-				if (!Pattern.compile(AutoMod.HASH_PDQ_REGEX).matcher(hash).matches()) {
-					ColorChat.msg(sender, "&r&cThis Hash seems to be incomplete, emprty or not a hash at all!");
-					return false;
-				}
 			} catch (IllegalArgumentException e) {
 				// Handle invalid Base64 input (e.g., characters not in the Base64 alphabet)
 				ColorChat.msg(sender, "&r&cThis &r&&6base-64 encoded&r&c hash seems to be malformed!");
 				return false;
 			}
 		}
-
 		// standard HEX hash
 		if (!Pattern.compile(AutoMod.HASH_PDQ_REGEX).matcher(hash).matches()) {
 			ColorChat.msg(sender, "&cThis Hash seems to be incomplete, emprty or not a hash at all!");

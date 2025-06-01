@@ -55,7 +55,7 @@ import pdqhashing.types.Hash256;
 
 public class AutoMod {
 	public static String HASH_PDQ_REGEX = "^[0-9A-Fa-f]{64}+$";
-	public static String B64_HASH_PDQ_REGEX = "^[A-Za-z0-9+/]{42}=$";
+	public static String B64_HASH_PDQ_REGEX = "^[A-Za-z0-9+/]{43}=$";
 
 	// auto moderation subsystem to prevent "unwanted" or potentially illegal images
 	// from being posted, automatically bans the uploader (name + IP) with a reason

@@ -85,7 +85,7 @@ public class BanHashCommand implements CommandExecutor {
 		// }
 
 		// handle the input of a base64 hash from thread.json
-		if (hash.endsWith("=")) {
+		if (Pattern.compile(AutoMod.B64_HASH_PDQ_REGEX).matcher(hash).matches()) {
 			hash = hash.replace("\\/", "/");
 			try {
 				StringBuilder hexString = new StringBuilder();
@@ -97,10 +97,6 @@ public class BanHashCommand implements CommandExecutor {
 					hexString.append(hex);
 				}
 				hash = hexString.toString();
-				if (!Pattern.compile(AutoMod.HASH_PDQ_REGEX).matcher(hash).matches()) {
-					ColorChat.msg(sender, "&r&cThis Hash seems to be incomplete, emprty or not a hash at all!");
-					return false;
-				}
 			} catch (IllegalArgumentException e) {
 				// Handle invalid Base64 input (e.g., characters not in the Base64 alphabet)
 				ColorChat.msg(sender, "&r&cThis &r&&6base-64 encoded&r&c hash seems to be malformed!");
