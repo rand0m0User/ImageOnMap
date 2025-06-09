@@ -74,8 +74,8 @@ public class AutoMod {
 		// if it is a requested SYSTEM ban, it is an auto perma with a reason provided
 		// by the remote server
 		if (!System) {
-			timestr = ImageOnMap.getPlugin().BannedHashes.get(offendinghash).TIMESTR;
-			reason = ImageOnMap.getPlugin().BannedHashes.get(offendinghash).REASON;
+			timestr = ImageOnMap.BannedHashes.get(offendinghash).TIMESTR;
+			reason = ImageOnMap.BannedHashes.get(offendinghash).REASON;
 		} else {
 			reason = ServerReason;
 		}
@@ -112,7 +112,6 @@ public class AutoMod {
 		if (perm) {
 			Bukkit.getScheduler().runTask(ImageOnMap.getPlugin(), () -> {
 				p.ban(message, (Duration) null, null);
-
 				p.banPlayerIP(message, false);
 			});
 		} else {
@@ -157,10 +156,10 @@ public class AutoMod {
 			}
 		}
 		Hash256 img = GetH256(hash);
-		for (String dbh : ImageOnMap.getPlugin().BannedHashes.keySet()) {
+		for (String dbh : ImageOnMap.BannedHashes.keySet()) {
 			int dist = img.hammingDistance(GetH256(dbh));
-			Bukkit.getServer().getConsoleSender()
-					.sendMessage("compare: " + hash.toString() + ", in db: " + dbh + ", hammingDistance: " + dist);
+			// Bukkit.getServer().getConsoleSender().sendMessage("compare: " +
+			// hash.toString() + ", in db: " + dbh + ", hammingDistance: " + dist);
 			if (dist <= 10) { // tolerance
 				Bukkit.getServer().getConsoleSender()
 						.sendMessage("PDQ hash of image likly matches! returning ban. user posted image:"

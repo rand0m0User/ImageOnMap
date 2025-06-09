@@ -36,62 +36,82 @@
 
 package fr.moribus.imageonmap.commands.bukkit;
 
-import java.util.Base64;
 import java.util.regex.Pattern;
 
+import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
 
 import fr.moribus.imageonmap.AutoMod;
+import fr.moribus.imageonmap.BanReason;
 import fr.moribus.imageonmap.ColorChat;
 import fr.moribus.imageonmap.ImageOnMap;
+import fr.moribus.imageonmap.i18n.I;
+import fr.moribus.imageonmap.map.ImageMap;
+import fr.moribus.imageonmap.map.MapManager;
+import fr.moribus.imageonmap.map.MapManagerException;
+import fr.moribus.imageonmap.map.PosterMap;
 
-public class UnbanHashCommand implements CommandExecutor {
+public class BanMapCommand implements CommandExecutor {
 
 	@Override
 	public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label,
 			@NotNull String[] args) {
-		if (!sender.isOp()) {
-			sender.sendMessage("You do not have permission to run this command.");
+		if (!sender.isOp()) { // boilerplate
+			ColorChat.msg(sender, "&r&cYou do not have permission to run this command.");
 			return false;
 		}
-		if (args.length > 1) {
-			ColorChat.msg(sender, "Too many parameters! Usage: /unbanhash [hash]");
+		ImageMap map = MapManager.getMap(Bukkit.getPlayer(sender.getName()).getInventory().getItemInMainHand());
+		if (!(map instanceof PosterMap poster)) {
+			ColorChat.msg(sender, "&cyou must hold the target map to ban!");
 			return false;
 		}
-		String hash = args[0];
-		// handle the input of a base64 hash from thread.json
-		if (Pattern.compile(AutoMod.B64_HASH_PDQ_REGEX).matcher(hash).matches()) {
-			try {
-				StringBuilder hexString = new StringBuilder();
-				for (byte b : Base64.getDecoder().decode(hash)) {
-					String hex = Integer.toHexString(0xff & b); // Ensure positive value for hex representation
-					if (hex.length() == 1) {
-						hexString.append('0'); // Pad single-digit hex values with a leading zero
-					}
-					hexString.append(hex);
-				}
-				hash = hexString.toString();
-			} catch (IllegalArgumentException e) {
-				// Handle invalid Base64 input (e.g., characters not in the Base64 alphabet)
-				ColorChat.msg(sender, "&r&cThis &r&&6base-64 encoded&r&c hash seems to be malformed!");
-				return false;
-			}
+		String hash = map.getHash(); // get the stored original hash
+
+		String timestr;
+		try {
+			timestr = args[0];
+		} catch (Exception e) {
+			ColorChat.msg(sender, "&cyou must provide a ban duration (eg, 3d, 30d, 10m)!");
+			return true;
 		}
+		String reason = String.join(" ", args).replace(timestr, "").trim();
+		if (reason.strip() == "") {
+			ColorChat.msg(sender, "&cyou must provide a reason!");
+			return false;
+		}
+
 		// standard HEX hash
 		if (!Pattern.compile(AutoMod.HASH_PDQ_REGEX).matcher(hash).matches()) {
-			ColorChat.msg(sender, "&cThis Hash seems to be incomplete, emprty or not a hash at all!");
+			ColorChat.msg(sender, "&r&cThis Hash seems to be incomplete, emprty or not a hash at all! corrupted data?");
+			ColorChat.msg(sender, "&r&c" + hash);
 			return false;
 		}
-		if (ImageOnMap.BannedHashes.keySet().contains(hash)) {
-			ImageOnMap.BannedHashes.remove(hash);
-			ColorChat.msg(sender, "&r&2Unbanned the hash: " + hash);
+		hash.toLowerCase(); // make formatting consistent
+
+		try {
+			MapManager.deleteMap(map); // delete the map
+		} catch (MapManagerException e) {
+			ImageOnMap.getPlugin().getLogger().warning(I.t("A non-existent map was requested to be deleted", e));
+			ColorChat.msg(sender, I.t("This map does not exist."));
+			return false;
+		}
+		if (!ImageOnMap.BannedHashes.keySet().contains(hash)) {
+			ImageOnMap.BannedHashes.put(hash, new BanReason(reason, args[0]));
+			AutoMod.DoFancyBan(hash, map.getUserUUID(), "", false); // hand out the ban
+
+			// remove the map from the player
+			Bukkit.getPlayer(sender.getName()).getInventory()
+					.remove(Bukkit.getPlayer(sender.getName()).getInventory().getItemInMainHand());
+			ColorChat.msg(sender, "&r&2Banned hash: " + hash);
 			ImageOnMap.savehashes();
 			return true;
 		} else {
-			ColorChat.msg(sender, "&cThis Hash is not banned.");
+			ColorChat.msg(sender, "&r&cThis Hash is already banned.");
+			ColorChat.msg(sender, "&r&6orignal reason: &r&8\"" + ImageOnMap.BannedHashes.get(hash).REASON
+					+ "\"&r&6 duration: &r&8\"" + ImageOnMap.BannedHashes.get(hash).TIMESTR + "\"&r&6.");
 			return true;
 		}
 	}

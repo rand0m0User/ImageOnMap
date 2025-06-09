@@ -114,14 +114,15 @@ public class BanHashCommand implements CommandExecutor {
 		// String reason = String.join(" ", args).replace(args[0], "").replace(args[1],
 		// "").trim();
 
-		if (!ImageOnMap.getPlugin().BannedHashes.keySet().contains(hash)) {
-			ImageOnMap.getPlugin().BannedHashes.put(hash, new BanReason(reason, args[1]));
+		if (!ImageOnMap.BannedHashes.keySet().contains(hash)) {
+			ImageOnMap.BannedHashes.put(hash, new BanReason(reason, args[1]));
 			ColorChat.msg(sender, "&r&2Banned hash: " + hash);
+			ImageOnMap.savehashes();
 			return true;
 		} else {
 			ColorChat.msg(sender, "&r&cThis Hash is already banned.");
-			ColorChat.msg(sender, "&r&6orignal reason: &r&8\"" + ImageOnMap.getPlugin().BannedHashes.get(hash).REASON
-					+ "\"&r&6 duration: &r&8\"" + ImageOnMap.getPlugin().BannedHashes.get(hash).TIMESTR + "\"&r&6.");
+			ColorChat.msg(sender, "&r&6orignal reason: &r&8\"" + ImageOnMap.BannedHashes.get(hash).REASON
+					+ "\"&r&6 duration: &r&8\"" + ImageOnMap.BannedHashes.get(hash).TIMESTR + "\"&r&6.");
 			return true;
 		}
 	}

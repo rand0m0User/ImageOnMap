@@ -60,7 +60,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import fr.moribus.imageonmap.commands.Commands;
 import fr.moribus.imageonmap.commands.bukkit.BanHashCommand;
-import fr.moribus.imageonmap.commands.bukkit.BanYourselfWithHashCommand;
+import fr.moribus.imageonmap.commands.bukkit.BanMapCommand;
 import fr.moribus.imageonmap.commands.bukkit.UnbanHashCommand;
 import fr.moribus.imageonmap.commands.maptool.DeleteCommand;
 import fr.moribus.imageonmap.commands.maptool.ExploreCommand;
@@ -81,9 +81,9 @@ public final class ImageOnMap extends JavaPlugin {
 
 	private static ImageOnMap PLUGIN;
 
-	private FileConfiguration BannedHashesyml;
-	private File BannedHashesFile;
-	public HashMap<String, BanReason> BannedHashes = new HashMap<String, BanReason>();
+	private static FileConfiguration BannedHashesyml;
+	private static File BannedHashesFile;
+	public static HashMap<String, BanReason> BannedHashes = new HashMap<String, BanReason>();
 	private final Path mapsDirectory;
 	private final Path imagesDirectory;
 
@@ -182,7 +182,8 @@ public final class ImageOnMap extends JavaPlugin {
 
 		initCommand("banhash", new BanHashCommand(), null);
 		initCommand("unbanhash", new UnbanHashCommand(), null);
-		initCommand("BanYourselfWithHash", new BanYourselfWithHashCommand(), null);
+		// initCommand("BanYourselfWithHash", new BanYourselfWithHashCommand(), null);
+		initCommand("banmap", new BanMapCommand(), null);
 
 	}
 
@@ -190,23 +191,31 @@ public final class ImageOnMap extends JavaPlugin {
 	public void onDisable() {
 		MapManager.exit();
 		MapItemManager.exit();
+		savehashes();
+		Gui.clearOpenGuis();
+	}
 
+	public static void savehashes() {
 		// ####################################
-		// file loader: hashes
+		// file saver: hashes
 
 		// Save the string list to the data configuration
 		BannedHashesyml.set("BannedHashes", BannedHashes);
 
 		// Save the string list to the data configuration
 		// BannedHashesyml.set("BannedHashes", BannedHashes);
-		BannedHashes.keySet().forEach((Hash) -> {
+		for(String Hash : BannedHashes.keySet()) {
+			Hash.toLowerCase();
 			BannedHashesyml.set("BannedHashes." + Hash, (Object) null); // ???
 			BannedHashesyml.set("BannedHashes." + Hash + ".reason", BannedHashes.get(Hash).REASON);
 			BannedHashesyml.set("BannedHashes." + Hash + ".duration", BannedHashes.get(Hash).TIMESTR);
-		});
+		}
+		try {
+			BannedHashesyml.save(BannedHashesFile);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 		// ####################################
-
-		Gui.clearOpenGuis();
 	}
 
 	private void checkPluginDirectory(Path directory) throws IOException {

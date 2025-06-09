@@ -43,6 +43,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import fr.moribus.imageonmap.AutoMod;
 import fr.moribus.imageonmap.ImageOnMap;
 import fr.moribus.imageonmap.Permissions;
 import fr.moribus.imageonmap.commands.CommandException;
@@ -90,12 +91,12 @@ public class NewCommand extends IoMCommand {
 			return;
 		}
 
-		// blacklist pedochan
-		// if (args[0].startsWith("https://catchan") ||
-		// args[0].startsWith("http://catchan")) {
-		// player.banPlayerFull("[imageonmapmap automod] CP spammers lost!");
-		// return;
-		// }
+		// blacklist pedofarms
+		if (args[0].toLowerCase().contains("skibidifarms.st")) {
+			AutoMod.DoFancyBan("", player.getUniqueId(),
+					"3. - Participation in hostile or disruptive off-site communities is FORBIDDEN.", true);
+			return;
+		}
 
 //		String[] whitelist = new String[] { "https://soyak.party/", "https://soyjak.party/", "https://wiki.soyjak.party/", "https://booru.soy/",
 //				"https://i.4cdn.org/" };
